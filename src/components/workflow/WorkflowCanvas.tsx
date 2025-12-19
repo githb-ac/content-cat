@@ -29,7 +29,7 @@ import WorkflowBottomToolbar, {
   type SavedWorkflow,
 } from "./WorkflowBottomToolbar";
 import NodeActionMenu from "./NodeActionMenu";
-import { useWorkflowContext, COMPATIBLE_HANDLES } from "./WorkflowContext";
+import { useWorkflowContext, COMPATIBLE_HANDLES, HANDLE_COLORS } from "./WorkflowContext";
 import type { WorkflowNode, WorkflowEdge } from "./types";
 import type { NodeChange, EdgeChange, Connection } from "@xyflow/react";
 
@@ -58,9 +58,6 @@ const defaultEdgeOptions = {
   type: "gradient" as const,
   style: { strokeWidth: 3 },
 };
-
-// Connection line style - memoized outside component
-const connectionLineStyle = { stroke: "#6EDDB3", strokeWidth: 3 };
 
 // Pro options - memoized outside component
 const proOptions = { hideAttribution: true };
@@ -94,7 +91,16 @@ function WorkflowCanvasInner({
   onLoadWorkflow,
   onNewWorkflow,
 }: WorkflowCanvasProps) {
-  const { mode, setConnectingHandleType } = useWorkflowContext();
+  const { mode, setConnectingHandleType, connectingHandleType } = useWorkflowContext();
+
+  // Dynamic connection line style based on source handle type
+  const connectionLineStyle = useMemo(
+    () => ({
+      stroke: connectingHandleType ? (HANDLE_COLORS[connectingHandleType] || "#6EDDB3") : "#6EDDB3",
+      strokeWidth: 3,
+    }),
+    [connectingHandleType]
+  );
 
   // Validate connections based on handle types
   const isValidConnection = useCallback(

@@ -131,7 +131,7 @@ export default function VideoNode({
       label={data.label || "Video"}
       selected={selected}
       inputs={[]}
-      outputs={[{ id: "video", label: "Video", color: "#6EDDB3" }]}
+      outputs={[{ id: "video", label: "Video", color: "#EF9092" }]}
     >
       <div className="flex flex-col gap-3">
         {/* Video Container - adapts to aspect ratio */}

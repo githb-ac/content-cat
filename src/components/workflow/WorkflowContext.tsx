@@ -4,6 +4,16 @@ import { createContext, useContext, useState, type ReactNode } from "react";
 
 export type InteractionMode = "select" | "pan";
 
+// Centralized color mapping for handle types - use these everywhere for consistency
+export const HANDLE_COLORS: Record<string, string> = {
+  prompt: "#A78BFA", // Purple - text/prompt data
+  video: "#EF9092", // Red/Pink - video data
+  image: "#F59E0B", // Orange - image data
+  result: "#6EDDB3", // Green - final result (output node only)
+  media: "#F59E0B", // Orange - generic media
+  audio: "#60A5FA", // Blue - audio data
+};
+
 // Define which handle types can connect to each other
 export const COMPATIBLE_HANDLES: Record<string, string[]> = {
   prompt: ["prompt"],

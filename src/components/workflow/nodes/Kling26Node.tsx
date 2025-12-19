@@ -127,7 +127,7 @@ const Kling26Node = memo(function Kling26Node({
         { id: "video", label: "Video", color: "#EF9092" },
         { id: "image", label: "Image", color: "#F59E0B" },
       ]}
-      outputs={[{ id: "video", label: "Video", color: "#6EDDB3" }]}
+      outputs={[{ id: "video", label: "Video", color: "#EF9092" }]}
     >
       <div className="flex flex-col gap-3">
         {/* Video Container */}

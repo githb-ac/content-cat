@@ -29,7 +29,7 @@ const ImageInputNode = memo(function ImageInputNode({
       label={data.label || "Image Input"}
       selected={selected}
       inputs={[]}
-      outputs={[{ id: "image", label: "Image", color: "#6EDDB3" }]}
+      outputs={[{ id: "image", label: "Image", color: "#F59E0B" }]}
     >
       <div className="flex flex-col gap-3">
         {/* Media Container - ~4:4.25 aspect ratio */}

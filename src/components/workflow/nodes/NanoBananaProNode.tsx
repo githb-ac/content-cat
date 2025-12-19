@@ -93,7 +93,7 @@ const NanoBananaProNode = memo(function NanoBananaProNode({
         { id: "prompt", label: "Prompt", color: "#A78BFA" },
         { id: "image", label: "Image", color: "#F59E0B" },
       ]}
-      outputs={[{ id: "image", label: "Image", color: "#6EDDB3" }]}
+      outputs={[{ id: "image", label: "Image", color: "#F59E0B" }]}
     >
       <div className="flex flex-col gap-3">
         {/* Image Container */}

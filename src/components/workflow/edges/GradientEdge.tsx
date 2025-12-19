@@ -2,16 +2,7 @@
 
 import { memo, useMemo } from "react";
 import { getBezierPath, type EdgeProps } from "@xyflow/react";
-
-// Map handle IDs to their colors
-const HANDLE_COLORS: Record<string, string> = {
-  prompt: "#A78BFA", // Purple
-  video: "#EF9092", // Red/Pink
-  image: "#F59E0B", // Orange
-  result: "#6EDDB3", // Green
-  media: "#F59E0B", // Orange
-  audio: "#60A5FA", // Blue
-};
+import { HANDLE_COLORS } from "../WorkflowContext";
 
 const GradientEdge = memo(function GradientEdge({
   id,
