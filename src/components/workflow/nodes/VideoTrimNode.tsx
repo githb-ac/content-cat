@@ -5,6 +5,8 @@ import type { NodeProps, Node } from "@xyflow/react";
 import { useEdges, useNodes } from "@xyflow/react";
 import BaseNode from "./BaseNode";
 import { downloadMedia } from "./MediaSaveOverlay";
+import { InputBadge, StaticBadge } from "./NodeBadges";
+import { useNodeUpdate } from "./useNodeUpdate";
 import type { VideoTrimNodeData } from "../types";
 import { getContainerHeight, NODE_WIDTH } from "../utils/aspectRatio";
 
@@ -77,9 +79,10 @@ const VideoTrimNode = memo(function VideoTrimNode({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [duration, setDuration] = useState<string>("0:00");
+  const [videoDuration, setVideoDuration] = useState<string>("0:00");
   const edges = useEdges();
   const nodes = useNodes();
+  const updateData = useNodeUpdate(id);
 
   // Get connected source nodes
   const connectedSources = useMemo(() => {
@@ -114,7 +117,7 @@ const VideoTrimNode = memo(function VideoTrimNode({
       const handleLoadedMetadata = () => {
         const mins = Math.floor(video.duration / 60);
         const secs = Math.floor(video.duration % 60);
-        setDuration(`${mins}:${secs.toString().padStart(2, "0")}`);
+        setVideoDuration(`${mins}:${secs.toString().padStart(2, "0")}`);
       };
 
       video.addEventListener("loadedmetadata", handleLoadedMetadata);
@@ -155,8 +158,8 @@ const VideoTrimNode = memo(function VideoTrimNode({
     if (end > start) {
       return formatTime(end - start);
     }
-    return duration;
-  }, [data.startTime, data.endTime, duration]);
+    return videoDuration;
+  }, [data.startTime, data.endTime, videoDuration]);
 
   return (
     <BaseNode
@@ -225,7 +228,7 @@ const VideoTrimNode = memo(function VideoTrimNode({
                 </div>
               </div>
               <div className="absolute right-2 bottom-2 rounded bg-black/60 px-1.5 py-0.5 text-[8px] text-white">
-                {duration}
+                {videoDuration}
               </div>
             </div>
           ) : (
@@ -251,15 +254,26 @@ const VideoTrimNode = memo(function VideoTrimNode({
 
         {/* Settings badges */}
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[8px] text-gray-400">
-            {detectedAspectRatio}
-          </span>
-          <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[8px] text-gray-400">
-            {formatTime(data.startTime || 0)} - {formatTime(data.endTime || 0)}
-          </span>
-          <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[8px] text-gray-400">
-            {trimmedDuration}
-          </span>
+          <StaticBadge label={detectedAspectRatio} />
+          <InputBadge
+            value={data.startTime || 0}
+            onChange={(v) => updateData("startTime", v)}
+            prefix="Start: "
+            suffix="s"
+            min={0}
+            step={0.1}
+            formatValue={formatTime}
+          />
+          <InputBadge
+            value={data.endTime || 0}
+            onChange={(v) => updateData("endTime", v)}
+            prefix="End: "
+            suffix="s"
+            min={0}
+            step={0.1}
+            formatValue={formatTime}
+          />
+          <StaticBadge label={trimmedDuration} />
         </div>
       </div>
     </BaseNode>

@@ -42,6 +42,7 @@ export interface FileNodeData extends BaseNodeData {
 
 // Model-specific node data types
 export interface Kling26NodeData extends BaseNodeData {
+  prompt?: string;
   videoUrl?: string;
   isGenerating?: boolean;
   mode?: "text-to-video" | "image-to-video";
@@ -54,6 +55,7 @@ export interface Kling26NodeData extends BaseNodeData {
 }
 
 export interface Kling25TurboNodeData extends BaseNodeData {
+  prompt?: string;
   videoUrl?: string;
   isGenerating?: boolean;
   mode?: "text-to-video" | "image-to-video";
@@ -66,6 +68,7 @@ export interface Kling25TurboNodeData extends BaseNodeData {
 }
 
 export interface Wan26NodeData extends BaseNodeData {
+  prompt?: string;
   videoUrl?: string;
   isGenerating?: boolean;
   mode?: "text-to-video" | "image-to-video" | "reference-to-video";

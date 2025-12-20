@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
       negativePrompt,
       cfgScale,
       seed,
+      specialFx,
     } = body;
 
     if (!prompt || typeof prompt !== "string") {
@@ -92,6 +93,14 @@ export async function POST(request: NextRequest) {
       hasEndImageUrl: !!endImageUrl,
     });
 
+    // TEMP: Console log for debugging aspect ratio issue
+    console.log("[DEBUG] Video generation request:", {
+      modelId,
+      mode,
+      aspectRatio,
+      hasImageUrl: !!imageUrl,
+    });
+
     // Resolve local file URLs to base64 for FAL.ai
     // (FAL.ai can't access our local /api/files/ URLs)
     const resolvedImageUrl = await resolveImageForFal(imageUrl);
@@ -110,6 +119,7 @@ export async function POST(request: NextRequest) {
               prompt,
               image_url: resolvedImageUrl,
               duration: duration as "5" | "10",
+              aspect_ratio: aspectRatio as "16:9" | "9:16" | "1:1",
               generate_audio: audioEnabled ?? false,
               negative_prompt: negativePrompt,
               cfg_scale: cfgScale ?? 0.5,
@@ -135,9 +145,11 @@ export async function POST(request: NextRequest) {
               prompt,
               image_url: resolvedImageUrl,
               duration: duration as "5" | "10",
+              aspect_ratio: aspectRatio as "16:9" | "9:16" | "1:1",
               negative_prompt: negativePrompt,
               cfg_scale: cfgScale ?? 0.5,
               tail_image_url: resolvedEndImageUrl,
+              special_fx: specialFx || undefined,
               seed,
             });
           } else {
@@ -160,6 +172,12 @@ export async function POST(request: NextRequest) {
               image_url: resolvedImageUrl,
               duration: duration as "5" | "10" | "15",
               resolution: resolution as "720p" | "1080p",
+              aspect_ratio: aspectRatio as
+                | "16:9"
+                | "9:16"
+                | "1:1"
+                | "4:3"
+                | "3:4",
               enable_prompt_expansion: enhanceEnabled ?? false,
               negative_prompt: negativePrompt,
               seed,

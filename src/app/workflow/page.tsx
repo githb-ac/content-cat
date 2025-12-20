@@ -6,8 +6,7 @@ import { ReactFlowProvider, useReactFlow } from "@xyflow/react";
 import type { Edge } from "@xyflow/react";
 import { toast } from "sonner";
 import { WorkflowCanvas } from "@/components/workflow";
-import WorkflowToolbar from "@/components/workflow/WorkflowToolbar";
-import WorkflowPropertiesPanel from "@/components/workflow/WorkflowPropertiesPanel";
+import Header from "@/components/Header";
 import { WorkflowProvider } from "@/components/workflow/WorkflowContext";
 import { useWorkflow } from "@/hooks/useWorkflow";
 import { useWorkflowExecution } from "@/hooks/useWorkflowExecution";
@@ -37,15 +36,6 @@ const ImportIcon = () => (
   </svg>
 );
 
-// Node types that have configuration panels
-const CONFIGURABLE_NODE_TYPES = new Set([
-  "nanoBananaPro",
-  "kling26",
-  "kling25Turbo",
-  "wan26",
-  "videoEditor",
-]);
-
 function WorkflowPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -64,7 +54,6 @@ function WorkflowPageContent() {
   const {
     nodes,
     edges,
-    selectedNodeId,
     onNodesChange,
     onEdgesChange,
     onConnect,
@@ -72,7 +61,6 @@ function WorkflowPageContent() {
     addNode,
     deleteNode,
     clearSelection,
-    updateNodeData,
     undo,
     redo,
     canUndo,
@@ -84,29 +72,14 @@ function WorkflowPageContent() {
     selectAllNodes,
   } = useWorkflow();
 
-  // Get the selected node object
-  const selectedNode = selectedNodeId
-    ? nodes.find((n) => n.id === selectedNodeId) || null
-    : null;
-
   // Workflow execution
   const {
     executeNode,
     executeAll,
     stopExecution,
-    canExecuteNode,
     isExecuting,
-    executingNodeId,
     executingNodeIds,
   } = useWorkflowExecution();
-
-  // Get execution state for the selected node
-  const executionState = selectedNodeId
-    ? canExecuteNode(selectedNodeId)
-    : { canExecute: false, reason: "No node selected" };
-
-  // Check if the selected node is currently executing
-  const isSelectedNodeExecuting = selectedNodeId === executingNodeId;
 
   // Load workflow from URL on mount
   useEffect(() => {
@@ -334,21 +307,6 @@ function WorkflowPageContent() {
     [nodes, executeNode]
   );
 
-  // Handle execution from properties panel
-  const handleExecuteSelectedNode = useCallback(async () => {
-    if (!selectedNodeId) return;
-    const node = nodes.find((n) => n.id === selectedNodeId);
-    if (node) {
-      toast.info(`Running ${node.data.label || node.type}...`);
-      const result = await executeNode(selectedNodeId);
-      if (result.success) {
-        toast.success(`${node.data.label || node.type} completed`);
-      } else {
-        toast.error(result.error || "Execution failed");
-      }
-    }
-  }, [selectedNodeId, nodes, executeNode]);
-
   const handleLoadWorkflow = useCallback(
     async (workflow: SavedWorkflow) => {
       const result = await getWorkflow(workflow.id);
@@ -474,12 +432,11 @@ function WorkflowPageContent() {
       canUndo={canUndo}
       canRedo={canRedo}
     >
-      <div className="flex h-screen overflow-hidden bg-[#111114]">
-        {/* Left Toolbar */}
-        <WorkflowToolbar />
+      <div className="flex h-screen flex-col overflow-hidden bg-[#0a0a0a]">
+        <Header />
 
         {/* Main Canvas Area */}
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex min-h-0 flex-1 overflow-hidden">
           <div
             className="relative flex-1"
             onDrop={handleDrop}
@@ -560,18 +517,6 @@ function WorkflowPageContent() {
               </div>
             )}
           </div>
-
-          {/* Properties Panel - only show for configurable nodes */}
-          {selectedNode &&
-            CONFIGURABLE_NODE_TYPES.has(selectedNode.type || "") && (
-              <WorkflowPropertiesPanel
-                selectedNode={selectedNode}
-                onUpdateNode={updateNodeData}
-                onExecute={handleExecuteSelectedNode}
-                isExecuting={isSelectedNodeExecuting}
-                executionState={executionState}
-              />
-            )}
         </div>
       </div>
     </WorkflowProvider>
@@ -590,7 +535,7 @@ export default function WorkflowPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-screen items-center justify-center bg-[#111114]">
+        <div className="flex h-screen items-center justify-center bg-[#0a0a0a]">
           <div className="text-gray-400">Loading workflow...</div>
         </div>
       }

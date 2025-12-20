@@ -66,12 +66,14 @@ export default function CreateVideoForm({
   const [showDurationDropdown, setShowDurationDropdown] = useState(false);
   const [showAspectDropdown, setShowAspectDropdown] = useState(false);
   const [showResolutionDropdown, setShowResolutionDropdown] = useState(false);
+  const [showSpecialFxDropdown, setShowSpecialFxDropdown] = useState(false);
 
   // Dropdown trigger refs
   const modelTriggerRef = useRef<HTMLButtonElement>(null);
   const durationTriggerRef = useRef<HTMLButtonElement>(null);
   const aspectTriggerRef = useRef<HTMLButtonElement>(null);
   const resolutionTriggerRef = useRef<HTMLButtonElement>(null);
+  const specialFxTriggerRef = useRef<HTMLButtonElement>(null);
 
   const handleModelChangeWithDropdown = (modelId: VideoModelId) => {
     onModelChange(modelId);
@@ -92,6 +94,33 @@ export default function CreateVideoForm({
     onResolutionChange(resolution);
     setShowResolutionDropdown(false);
   };
+
+  const handleSpecialFxChangeWithDropdown = (fx: string) => {
+    onUpdateVideoState({ specialFx: fx || undefined });
+    setShowSpecialFxDropdown(false);
+  };
+
+  // Special FX options for Kling 2.5 Turbo
+  const specialFxOptions = [
+    { id: "", label: "None" },
+    { id: "hug", label: "Hug" },
+    { id: "kiss", label: "Kiss" },
+    { id: "heart_gesture", label: "Heart Gesture" },
+    { id: "squish", label: "Squish" },
+    { id: "expansion", label: "Expansion" },
+    { id: "fuzzyfuzzy", label: "Fuzzy" },
+    { id: "bloombloom", label: "Bloom" },
+    { id: "dizzydizzy", label: "Dizzy" },
+    { id: "jelly_press", label: "Jelly Press" },
+    { id: "jelly_slice", label: "Jelly Slice" },
+    { id: "jelly_squish", label: "Jelly Squish" },
+    { id: "jelly_jiggle", label: "Jelly Jiggle" },
+    { id: "pixelpixel", label: "Pixel" },
+    { id: "yearbook", label: "Yearbook" },
+    { id: "instant_film", label: "Instant Film" },
+    { id: "anime_figure", label: "Anime Figure" },
+    { id: "rocketrocket", label: "Rocket" },
+  ];
 
   if (showPresetSelector) {
     return (
@@ -320,6 +349,38 @@ export default function CreateVideoForm({
               id: res,
               label: res,
             }))}
+          />
+        </fieldset>
+      )}
+
+      {/* Special FX - Only show for Kling 2.5 Turbo */}
+      {modelConfig.supportsSpecialFx && (
+        <fieldset className="relative">
+          <button
+            ref={specialFxTriggerRef}
+            onClick={() => setShowSpecialFxDropdown(!showSpecialFxDropdown)}
+            className="grid w-full grid-cols-[1fr_auto] items-center gap-2 rounded-xl bg-zinc-800/50 px-3 py-2.5 text-left transition hover:bg-zinc-700/50"
+          >
+            <div className="grid">
+              <span className="text-xs font-medium whitespace-nowrap text-gray-500">
+                Special FX
+              </span>
+              <div className="text-sm font-medium text-white">
+                {videoState.specialFx
+                  ? specialFxOptions.find((o) => o.id === videoState.specialFx)
+                      ?.label || "None"
+                  : "None"}
+              </div>
+            </div>
+            <ChevronDownIcon />
+          </button>
+          <SimpleDropdown
+            isOpen={showSpecialFxDropdown}
+            onClose={() => setShowSpecialFxDropdown(false)}
+            value={videoState.specialFx || ""}
+            onChange={(id) => handleSpecialFxChangeWithDropdown(id)}
+            triggerRef={specialFxTriggerRef}
+            options={specialFxOptions}
           />
         </fieldset>
       )}

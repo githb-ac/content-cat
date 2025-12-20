@@ -5,8 +5,27 @@ import type { NodeProps, Node } from "@xyflow/react";
 import { useEdges, useNodes } from "@xyflow/react";
 import BaseNode from "./BaseNode";
 import { downloadMedia } from "./MediaSaveOverlay";
+import { DropdownBadge, ToggleBadge, StaticBadge } from "./NodeBadges";
+import { useNodeUpdate } from "./useNodeUpdate";
 import type { VideoSubtitlesNodeData } from "../types";
 import { getContainerHeight, NODE_WIDTH } from "../utils/aspectRatio";
+
+// Style options
+const STYLE_OPTIONS = [
+  { value: "classic", label: "Classic" },
+  { value: "tiktok", label: "TikTok" },
+  { value: "highlight", label: "Highlight" },
+  { value: "minimal", label: "Minimal" },
+  { value: "neon", label: "Neon" },
+  { value: "karaoke", label: "Karaoke" },
+];
+
+// Position options
+const POSITION_OPTIONS = [
+  { value: "top", label: "Top" },
+  { value: "center", label: "Center" },
+  { value: "bottom", label: "Bottom" },
+];
 
 const PlayIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -61,15 +80,6 @@ const VideoIcon = () => (
   </svg>
 );
 
-const STYLE_LABELS: Record<string, string> = {
-  classic: "Classic",
-  tiktok: "TikTok",
-  highlight: "Highlight",
-  minimal: "Minimal",
-  neon: "Neon",
-  karaoke: "Karaoke",
-};
-
 const VideoSubtitlesNode = memo(function VideoSubtitlesNode({
   id,
   data,
@@ -78,9 +88,10 @@ const VideoSubtitlesNode = memo(function VideoSubtitlesNode({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [duration, setDuration] = useState<string>("0:00");
+  const [videoDuration, setVideoDuration] = useState<string>("0:00");
   const edges = useEdges();
   const nodes = useNodes();
+  const updateData = useNodeUpdate(id);
 
   // Get connected source nodes
   const connectedSources = useMemo(() => {
@@ -115,7 +126,7 @@ const VideoSubtitlesNode = memo(function VideoSubtitlesNode({
       const handleLoadedMetadata = () => {
         const mins = Math.floor(video.duration / 60);
         const secs = Math.floor(video.duration % 60);
-        setDuration(`${mins}:${secs.toString().padStart(2, "0")}`);
+        setVideoDuration(`${mins}:${secs.toString().padStart(2, "0")}`);
       };
 
       video.addEventListener("loadedmetadata", handleLoadedMetadata);
@@ -148,8 +159,6 @@ const VideoSubtitlesNode = memo(function VideoSubtitlesNode({
     },
     [data.videoUrl]
   );
-
-  const styleLabel = STYLE_LABELS[data.style || "tiktok"] || "TikTok";
 
   return (
     <BaseNode
@@ -221,7 +230,7 @@ const VideoSubtitlesNode = memo(function VideoSubtitlesNode({
                 </div>
               </div>
               <div className="absolute right-2 bottom-2 rounded bg-black/60 px-1.5 py-0.5 text-[8px] text-white">
-                {duration}
+                {videoDuration}
               </div>
             </div>
           ) : (
@@ -247,20 +256,22 @@ const VideoSubtitlesNode = memo(function VideoSubtitlesNode({
 
         {/* Settings badges */}
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[8px] text-gray-400">
-            {detectedAspectRatio}
-          </span>
-          <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[8px] text-gray-400">
-            {styleLabel}
-          </span>
-          <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[8px] text-gray-400">
-            {data.position || "bottom"}
-          </span>
-          {data.autoGenerate && (
-            <span className="rounded bg-purple-900/50 px-1.5 py-0.5 text-[8px] text-purple-300">
-              Auto
-            </span>
-          )}
+          <StaticBadge label={detectedAspectRatio} />
+          <DropdownBadge
+            value={data.style || "tiktok"}
+            options={STYLE_OPTIONS}
+            onSelect={(v) => updateData("style", v)}
+          />
+          <DropdownBadge
+            value={data.position || "bottom"}
+            options={POSITION_OPTIONS}
+            onSelect={(v) => updateData("position", v)}
+          />
+          <ToggleBadge
+            label="Auto"
+            enabled={data.autoGenerate ?? false}
+            onToggle={() => updateData("autoGenerate", !data.autoGenerate)}
+          />
         </div>
       </div>
     </BaseNode>

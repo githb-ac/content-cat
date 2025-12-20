@@ -5,8 +5,31 @@ import type { NodeProps, Node } from "@xyflow/react";
 import { useReactFlow } from "@xyflow/react";
 import BaseNode from "./BaseNode";
 import { downloadMedia } from "./MediaSaveOverlay";
+import { DropdownBadge, ToggleBadge } from "./NodeBadges";
+import { PromptInput } from "./PromptInput";
+import { useNodeUpdate } from "./useNodeUpdate";
 import type { Kling26NodeData } from "../types";
-import { getContainerHeight, NODE_WIDTH } from "../utils/aspectRatio";
+import {
+  getContainerHeight,
+  NODE_WIDTH,
+  normalizeToStandardRatio,
+} from "../utils/aspectRatio";
+
+// Duration options for Kling 2.6
+const DURATION_OPTIONS = [
+  { value: "5", label: "5" },
+  { value: "10", label: "10" },
+];
+
+// Supported aspect ratios for Kling 2.6
+const SUPPORTED_RATIOS = ["1:1", "16:9", "9:16"];
+
+// Aspect ratio options
+const ASPECT_RATIO_OPTIONS = [
+  { value: "16:9", label: "16:9" },
+  { value: "9:16", label: "9:16" },
+  { value: "1:1", label: "1:1" },
+];
 
 const PlayIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -54,13 +77,14 @@ const Kling26Node = memo(function Kling26Node({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [duration, setDuration] = useState<string>("0:00");
+  const [videoDuration, setVideoDuration] = useState<string>("0:00");
   const [sourceAspectRatio, setSourceAspectRatio] = useState<string | null>(
     null
   );
-  const { getNodes, getEdges } = useReactFlow();
+  const { getNodes, getEdges, setNodes } = useReactFlow();
+  const updateData = useNodeUpdate(id);
 
-  // Detect aspect ratio from connected source nodes
+  // Detect aspect ratio from connected source nodes and sync to node data
   useEffect(() => {
     const checkSourceAspectRatio = () => {
       const edges = getEdges();
@@ -68,6 +92,27 @@ const Kling26Node = memo(function Kling26Node({
 
       // Find edges connected to this node
       const incomingEdges = edges.filter((edge) => edge.target === id);
+
+      // Helper to sync detected ratio to node data (normalized to supported values)
+      const syncAspectRatio = (sourceRatio: string) => {
+        const normalizedRatio = normalizeToStandardRatio(
+          sourceRatio,
+          SUPPORTED_RATIOS
+        );
+        setSourceAspectRatio(normalizedRatio);
+        if (data.aspectRatio !== normalizedRatio) {
+          setNodes((nds) =>
+            nds.map((node) =>
+              node.id === id
+                ? {
+                    ...node,
+                    data: { ...node.data, aspectRatio: normalizedRatio },
+                  }
+                : node
+            )
+          );
+        }
+      };
 
       // Prioritize image inputs for aspect ratio detection
       const imageHandles = ["image", "firstFrame", "lastFrame"];
@@ -80,7 +125,7 @@ const Kling26Node = memo(function Kling26Node({
           if (sourceNode) {
             const sourceData = sourceNode.data as { aspectRatio?: string };
             if (sourceData.aspectRatio) {
-              setSourceAspectRatio(sourceData.aspectRatio);
+              syncAspectRatio(sourceData.aspectRatio);
               return;
             }
           }
@@ -93,7 +138,7 @@ const Kling26Node = memo(function Kling26Node({
         if (sourceNode) {
           const sourceData = sourceNode.data as { aspectRatio?: string };
           if (sourceData.aspectRatio) {
-            setSourceAspectRatio(sourceData.aspectRatio);
+            syncAspectRatio(sourceData.aspectRatio);
             return;
           }
         }
@@ -109,7 +154,7 @@ const Kling26Node = memo(function Kling26Node({
     const interval = setInterval(checkSourceAspectRatio, 500);
 
     return () => clearInterval(interval);
-  }, [id, getNodes, getEdges]);
+  }, [id, getNodes, getEdges, setNodes, data.aspectRatio]);
 
   // User override takes precedence, then detected, then default
   const detectedAspectRatio = data.aspectRatio || sourceAspectRatio || "16:9";
@@ -127,7 +172,7 @@ const Kling26Node = memo(function Kling26Node({
       const handleLoadedMetadata = () => {
         const mins = Math.floor(video.duration / 60);
         const secs = Math.floor(video.duration % 60);
-        setDuration(`${mins}:${secs.toString().padStart(2, "0")}`);
+        setVideoDuration(`${mins}:${secs.toString().padStart(2, "0")}`);
       };
 
       video.addEventListener("loadedmetadata", handleLoadedMetadata);
@@ -166,7 +211,6 @@ const Kling26Node = memo(function Kling26Node({
       label={data.label || "Kling 2.6 Pro"}
       selected={selected}
       inputs={[
-        { id: "prompt", label: "Prompt", color: "#A78BFA" },
         { id: "video", label: "Video", color: "#EF9092" },
         { id: "image", label: "Image", color: "#F59E0B" },
       ]}
@@ -234,7 +278,7 @@ const Kling26Node = memo(function Kling26Node({
                 </div>
               </div>
               <div className="absolute right-2 bottom-2 rounded bg-black/60 px-1.5 py-0.5 text-[8px] text-white">
-                {duration}
+                {videoDuration}
               </div>
             </div>
           ) : (
@@ -257,19 +301,31 @@ const Kling26Node = memo(function Kling26Node({
           )}
         </div>
 
+        {/* Prompt Input */}
+        <PromptInput
+          value={data.prompt || ""}
+          onChange={(v) => updateData("prompt", v)}
+          placeholder="Describe what you want to generate..."
+        />
+
         {/* Settings badges */}
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[8px] text-gray-400">
-            {detectedAspectRatio}
-          </span>
-          <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[8px] text-gray-400">
-            {data.duration || "5"}s
-          </span>
-          {data.audioEnabled && (
-            <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[8px] text-gray-400">
-              Audio
-            </span>
-          )}
+          <DropdownBadge
+            value={detectedAspectRatio}
+            options={ASPECT_RATIO_OPTIONS}
+            onSelect={(v) => updateData("aspectRatio", v)}
+          />
+          <DropdownBadge
+            value={data.duration || "5"}
+            options={DURATION_OPTIONS}
+            onSelect={(v) => updateData("duration", v)}
+            suffix="s"
+          />
+          <ToggleBadge
+            label="Audio"
+            enabled={data.audioEnabled ?? false}
+            onToggle={() => updateData("audioEnabled", !data.audioEnabled)}
+          />
         </div>
       </div>
     </BaseNode>

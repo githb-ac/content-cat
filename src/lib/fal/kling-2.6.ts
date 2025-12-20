@@ -50,6 +50,8 @@ export interface Kling26ImageToVideoInput {
   image_url: string;
   /** Video duration in seconds. Default: "5" */
   duration?: Duration;
+  /** Aspect ratio of the output video. Default: inferred from image or "16:9" */
+  aspect_ratio?: AspectRatio;
   /** Things to avoid in generation */
   negative_prompt?: string;
   /** CFG scale (0-1). Controls prompt adherence. Default: 0.5 */
@@ -178,6 +180,7 @@ export class Kling26Client {
         prompt: input.prompt,
         image_url: input.image_url,
         duration: input.duration || DEFAULT_DURATION,
+        aspect_ratio: input.aspect_ratio || DEFAULT_ASPECT_RATIO,
         negative_prompt: input.negative_prompt,
         cfg_scale: input.cfg_scale ?? DEFAULT_CFG_SCALE,
         generate_audio: input.generate_audio ?? DEFAULT_GENERATE_AUDIO,

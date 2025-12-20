@@ -113,6 +113,7 @@ export function useVideoGeneration(options: UseVideoGenerationOptions = {}) {
             enhanceEnabled: videoState.enhanceEnabled,
             imageUrl: videoState.imageUrl,
             endImageUrl: videoState.endImageUrl,
+            specialFx: videoState.specialFx,
           }),
           timeout: 300000, // 5 minutes for video generation
         });

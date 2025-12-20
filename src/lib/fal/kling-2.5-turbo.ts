@@ -68,6 +68,8 @@ export interface Kling25TurboImageToVideoInput {
   image_url: string;
   /** Video duration in seconds. Default: "5" */
   duration?: Duration;
+  /** Aspect ratio of the output video. Default: inferred from image or "16:9" */
+  aspect_ratio?: AspectRatio;
   /** Things to avoid in generation */
   negative_prompt?: string;
   /** CFG scale (0-1). Controls prompt adherence. Default: 0.5 */
@@ -215,6 +217,15 @@ export class Kling25TurboClient {
       );
     }
 
+    const finalAspectRatio = input.aspect_ratio || DEFAULT_ASPECT_RATIO;
+
+    // TEMP: Debug logging for aspect ratio issue
+    console.log("[DEBUG] Kling 2.5 Turbo image-to-video:", {
+      inputAspectRatio: input.aspect_ratio,
+      finalAspectRatio,
+      defaultAspectRatio: DEFAULT_ASPECT_RATIO,
+    });
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await (fal.subscribe as any)(
       KLING_25_TURBO_IMAGE_TO_VIDEO_MODEL,
@@ -223,6 +234,7 @@ export class Kling25TurboClient {
           prompt: input.prompt,
           image_url: input.image_url,
           duration: input.duration || DEFAULT_DURATION,
+          aspect_ratio: finalAspectRatio,
           negative_prompt: input.negative_prompt,
           cfg_scale: input.cfg_scale ?? DEFAULT_CFG_SCALE,
           ...(input.tail_image_url && { tail_image_url: input.tail_image_url }),

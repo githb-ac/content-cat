@@ -5,8 +5,36 @@ import type { NodeProps, Node } from "@xyflow/react";
 import { useEdges, useNodes } from "@xyflow/react";
 import BaseNode from "./BaseNode";
 import { downloadMedia } from "./MediaSaveOverlay";
+import { DropdownBadge, StaticBadge } from "./NodeBadges";
+import { useNodeUpdate } from "./useNodeUpdate";
 import type { VideoTransitionNodeData } from "../types";
 import { getContainerHeight, NODE_WIDTH } from "../utils/aspectRatio";
+
+// Transition type options (categorized)
+const TRANSITION_OPTIONS = [
+  { value: "none", label: "None", category: "None" },
+  { value: "slideUp", label: "Slide Up", category: "Slide" },
+  { value: "slideDown", label: "Slide Down", category: "Slide" },
+  { value: "slideLeft", label: "Slide Left", category: "Slide" },
+  { value: "slideRight", label: "Slide Right", category: "Slide" },
+  { value: "flash", label: "Flash", category: "Quick" },
+  { value: "glitch", label: "Glitch", category: "Quick" },
+  { value: "zoomIn", label: "Zoom In", category: "Zoom" },
+  { value: "zoomOut", label: "Zoom Out", category: "Zoom" },
+  { value: "crossfade", label: "Crossfade", category: "Classic" },
+  { value: "fade", label: "Fade", category: "Classic" },
+  { value: "blur", label: "Blur", category: "Classic" },
+  { value: "wipeLeft", label: "Wipe Left", category: "Wipe" },
+  { value: "wipeRight", label: "Wipe Right", category: "Wipe" },
+];
+
+// Duration options
+const DURATION_OPTIONS = [
+  { value: "0.2", label: "0.2" },
+  { value: "0.3", label: "0.3" },
+  { value: "0.5", label: "0.5" },
+  { value: "1", label: "1" },
+];
 
 const PlayIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -60,23 +88,6 @@ const VideoIcon = () => (
   </svg>
 );
 
-const TRANSITION_LABELS: Record<string, string> = {
-  none: "None",
-  fade: "Fade",
-  crossfade: "Crossfade",
-  slideLeft: "Slide Left",
-  slideRight: "Slide Right",
-  slideUp: "Slide Up",
-  slideDown: "Slide Down",
-  zoomIn: "Zoom In",
-  zoomOut: "Zoom Out",
-  wipeLeft: "Wipe Left",
-  wipeRight: "Wipe Right",
-  blur: "Blur",
-  glitch: "Glitch",
-  flash: "Flash",
-};
-
 const VideoTransitionNode = memo(function VideoTransitionNode({
   id,
   data,
@@ -85,9 +96,10 @@ const VideoTransitionNode = memo(function VideoTransitionNode({
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
-  const [duration, setDuration] = useState<string>("0:00");
+  const [videoDuration, setVideoDuration] = useState<string>("0:00");
   const edges = useEdges();
   const nodes = useNodes();
+  const updateData = useNodeUpdate(id);
 
   // Get connected source nodes
   const connectedSources = useMemo(() => {
@@ -122,7 +134,7 @@ const VideoTransitionNode = memo(function VideoTransitionNode({
       const handleLoadedMetadata = () => {
         const mins = Math.floor(video.duration / 60);
         const secs = Math.floor(video.duration % 60);
-        setDuration(`${mins}:${secs.toString().padStart(2, "0")}`);
+        setVideoDuration(`${mins}:${secs.toString().padStart(2, "0")}`);
       };
 
       video.addEventListener("loadedmetadata", handleLoadedMetadata);
@@ -155,9 +167,6 @@ const VideoTransitionNode = memo(function VideoTransitionNode({
     },
     [data.videoUrl]
   );
-
-  const transitionLabel =
-    TRANSITION_LABELS[data.transitionType || "fade"] || "Fade";
 
   return (
     <BaseNode
@@ -229,7 +238,7 @@ const VideoTransitionNode = memo(function VideoTransitionNode({
                 </div>
               </div>
               <div className="absolute right-2 bottom-2 rounded bg-black/60 px-1.5 py-0.5 text-[8px] text-white">
-                {duration}
+                {videoDuration}
               </div>
             </div>
           ) : (
@@ -255,15 +264,19 @@ const VideoTransitionNode = memo(function VideoTransitionNode({
 
         {/* Settings badges */}
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[8px] text-gray-400">
-            {detectedAspectRatio}
-          </span>
-          <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[8px] text-gray-400">
-            {transitionLabel}
-          </span>
-          <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[8px] text-gray-400">
-            {data.duration || 0.5}s
-          </span>
+          <StaticBadge label={detectedAspectRatio} />
+          <DropdownBadge
+            value={data.transitionType || "fade"}
+            options={TRANSITION_OPTIONS}
+            onSelect={(v) => updateData("transitionType", v)}
+            showCategories
+          />
+          <DropdownBadge
+            value={String(data.duration || 0.5)}
+            options={DURATION_OPTIONS}
+            onSelect={(v) => updateData("duration", parseFloat(v))}
+            suffix="s"
+          />
         </div>
       </div>
     </BaseNode>

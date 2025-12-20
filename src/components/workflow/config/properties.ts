@@ -63,13 +63,18 @@ export const SPECIAL_FX_OPTIONS: SelectOption[] = [
   { value: "heart_gesture", label: "Heart Gesture" },
   { value: "squish", label: "Squish" },
   { value: "expansion", label: "Expansion" },
+  { value: "fuzzyfuzzy", label: "Fuzzy" },
   { value: "bloombloom", label: "Bloom" },
   { value: "dizzydizzy", label: "Dizzy" },
   { value: "jelly_press", label: "Jelly Press" },
+  { value: "jelly_slice", label: "Jelly Slice" },
   { value: "jelly_squish", label: "Jelly Squish" },
+  { value: "jelly_jiggle", label: "Jelly Jiggle" },
   { value: "pixelpixel", label: "Pixel" },
   { value: "yearbook", label: "Yearbook" },
+  { value: "instant_film", label: "Instant Film" },
   { value: "anime_figure", label: "Anime Figure" },
+  { value: "rocketrocket", label: "Rocket" },
 ];
 
 // Video Editor configuration

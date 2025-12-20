@@ -15,6 +15,8 @@ const TRANSITION_OPTIONS: {
   category: string;
   duration: number;
 }[] = [
+  // None (default - just concatenate without any transition)
+  { value: "none", label: "None", category: "None", duration: 0 },
   // Fast motion transitions (most popular for short-form)
   {
     value: "slideUp",
@@ -58,11 +60,9 @@ const TRANSITION_OPTIONS: {
   // Wipe
   { value: "wipeLeft", label: "Wipe Left", category: "Wipe", duration: 0.4 },
   { value: "wipeRight", label: "Wipe Right", category: "Wipe", duration: 0.4 },
-  // None
-  { value: "none", label: "Cut", category: "None", duration: 0 },
 ];
 
-const DEFAULT_TRANSITION = { type: "slideUp" as TransitionType, duration: 0.2 };
+const DEFAULT_TRANSITION = { type: "none" as TransitionType, duration: 0 };
 
 const ChevronDownIcon = () => (
   <svg
@@ -485,12 +485,12 @@ const VideoConcatNode = memo(function VideoConcatNode({
                     `}</style>
                     {/* Group by category */}
                     {[
+                      "None",
                       "Fast Motion",
                       "Quick",
                       "Zoom",
                       "Classic",
                       "Wipe",
-                      "None",
                     ].map((category) => {
                       const categoryOptions = TRANSITION_OPTIONS.filter(
                         (t) => t.category === category

@@ -58,6 +58,8 @@ export interface Wan26ImageToVideoInput {
   duration?: Duration;
   /** Output resolution. Default: "720p" */
   resolution?: Resolution;
+  /** Aspect ratio of the output video. Default: inferred from image or "16:9" */
+  aspect_ratio?: AspectRatio;
   /** Things to avoid in generation */
   negative_prompt?: string;
   /** Use LLM to enhance the prompt. Default: false */
@@ -214,6 +216,7 @@ export class Wan26Client {
         image_url: input.image_url,
         duration: input.duration || DEFAULT_DURATION,
         resolution: input.resolution || DEFAULT_RESOLUTION,
+        aspect_ratio: input.aspect_ratio || DEFAULT_ASPECT_RATIO,
         negative_prompt: input.negative_prompt,
         enable_prompt_expansion:
           input.enable_prompt_expansion ?? DEFAULT_ENABLE_PROMPT_EXPANSION,

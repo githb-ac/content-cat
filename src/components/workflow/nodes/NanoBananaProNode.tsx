@@ -6,8 +6,55 @@ import { useReactFlow } from "@xyflow/react";
 import Image from "next/image";
 import BaseNode from "./BaseNode";
 import { downloadMedia } from "./MediaSaveOverlay";
+import { DropdownBadge } from "./NodeBadges";
+import { PromptInput } from "./PromptInput";
+import { useNodeUpdate } from "./useNodeUpdate";
 import type { NanoBananaProNodeData } from "../types";
-import { getContainerHeight, NODE_WIDTH } from "../utils/aspectRatio";
+import {
+  getContainerHeight,
+  NODE_WIDTH,
+  normalizeToStandardRatio,
+} from "../utils/aspectRatio";
+
+// Supported aspect ratios for Nano Banana Pro
+const SUPPORTED_RATIOS = [
+  "1:1",
+  "16:9",
+  "9:16",
+  "4:3",
+  "3:4",
+  "3:2",
+  "2:3",
+  "21:9",
+  "5:4",
+  "4:5",
+];
+
+// Aspect ratio options
+const ASPECT_RATIO_OPTIONS = [
+  { value: "1:1", label: "1:1" },
+  { value: "16:9", label: "16:9" },
+  { value: "9:16", label: "9:16" },
+  { value: "4:3", label: "4:3" },
+  { value: "3:4", label: "3:4" },
+  { value: "3:2", label: "3:2" },
+  { value: "2:3", label: "2:3" },
+  { value: "21:9", label: "21:9" },
+];
+
+// Resolution options
+const RESOLUTION_OPTIONS = [
+  { value: "1K", label: "1K" },
+  { value: "2K", label: "2K" },
+  { value: "4K", label: "4K" },
+];
+
+// Output format options
+const FORMAT_OPTIONS = [
+  { value: "png", label: "PNG" },
+  { value: "jpeg", label: "JPEG" },
+  { value: "webp", label: "WebP" },
+];
 
 const MIN_INPUTS = 5;
 const MAX_INPUTS = 14;
@@ -54,12 +101,13 @@ const NanoBananaProNode = memo(function NanoBananaProNode({
     null
   );
   const { setNodes, getNodes, getEdges } = useReactFlow();
+  const updateData = useNodeUpdate(id);
 
   // Dynamic input count (5-14)
   const inputCount = data.inputCount || MIN_INPUTS;
   const canAddInput = inputCount < MAX_INPUTS;
 
-  // Detect aspect ratio from connected source nodes
+  // Detect aspect ratio from connected source nodes and sync to node data
   useEffect(() => {
     const checkSourceAspectRatio = () => {
       const edges = getEdges();
@@ -74,7 +122,26 @@ const NanoBananaProNode = memo(function NanoBananaProNode({
         if (sourceNode) {
           const sourceData = sourceNode.data as { aspectRatio?: string };
           if (sourceData.aspectRatio) {
-            setSourceAspectRatio(sourceData.aspectRatio);
+            // Normalize to a supported ratio for this node type
+            const normalizedRatio = normalizeToStandardRatio(
+              sourceData.aspectRatio,
+              SUPPORTED_RATIOS
+            );
+            setSourceAspectRatio(normalizedRatio);
+
+            // Sync to node data if different from current value
+            if (data.aspectRatio !== normalizedRatio) {
+              setNodes((nds) =>
+                nds.map((node) =>
+                  node.id === id
+                    ? {
+                        ...node,
+                        data: { ...node.data, aspectRatio: normalizedRatio },
+                      }
+                    : node
+                )
+              );
+            }
             return;
           }
         }
@@ -90,22 +157,18 @@ const NanoBananaProNode = memo(function NanoBananaProNode({
     const interval = setInterval(checkSourceAspectRatio, 500);
 
     return () => clearInterval(interval);
-  }, [id, getNodes, getEdges]);
+  }, [id, getNodes, getEdges, setNodes, data.aspectRatio]);
 
   // User override takes precedence, then detected, then default
   const detectedAspectRatio = data.aspectRatio || sourceAspectRatio || "1:1";
 
-  // Generate dynamic inputs array (prompt + reference images)
+  // Generate dynamic inputs array (reference images only, prompt is inline)
   const inputs = useMemo(() => {
-    const imageInputs = Array.from({ length: inputCount }, (_, i) => ({
+    return Array.from({ length: inputCount }, (_, i) => ({
       id: `image${i + 1}`,
       label: `Ref ${i + 1}`,
       color: "#F59E0B",
     }));
-    return [
-      { id: "prompt", label: "Prompt", color: "#A78BFA" },
-      ...imageInputs,
-    ];
   }, [inputCount]);
 
   // Handler to add more inputs
@@ -135,9 +198,8 @@ const NanoBananaProNode = memo(function NanoBananaProNode({
 
   // Calculate minimum height needed to accommodate all input handles + add button
   // Handles start at 65px and are spaced 36px apart
-  // Total inputs = 1 (prompt) + inputCount (images)
   const minContentHeight = useMemo(() => {
-    const totalInputs = 1 + inputCount; // prompt + image inputs
+    const totalInputs = inputCount; // image inputs only (prompt is inline)
     // Last handle position + handle height + buffer - header height
     // Add extra 36px for the + button if we can add more inputs
     const addButtonSpace = canAddInput ? 36 : 0;
@@ -239,17 +301,30 @@ const NanoBananaProNode = memo(function NanoBananaProNode({
           )}
         </div>
 
+        {/* Prompt Input */}
+        <PromptInput
+          value={data.prompt || ""}
+          onChange={(v) => updateData("prompt", v)}
+          placeholder="Describe what you want to generate..."
+        />
+
         {/* Settings badges */}
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[8px] text-gray-400">
-            {detectedAspectRatio}
-          </span>
-          <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[8px] text-gray-400">
-            {data.resolution || "1K"}
-          </span>
-          <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[8px] text-gray-400 uppercase">
-            {data.outputFormat || "png"}
-          </span>
+          <DropdownBadge
+            value={detectedAspectRatio}
+            options={ASPECT_RATIO_OPTIONS}
+            onSelect={(v) => updateData("aspectRatio", v)}
+          />
+          <DropdownBadge
+            value={data.resolution || "1K"}
+            options={RESOLUTION_OPTIONS}
+            onSelect={(v) => updateData("resolution", v)}
+          />
+          <DropdownBadge
+            value={data.outputFormat || "png"}
+            options={FORMAT_OPTIONS}
+            onSelect={(v) => updateData("outputFormat", v)}
+          />
         </div>
       </div>
     </BaseNode>

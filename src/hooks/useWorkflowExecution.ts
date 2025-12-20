@@ -569,6 +569,7 @@ export function useWorkflowExecution() {
         duration: nodeData.duration || "5",
         cfgScale: nodeData.cfgScale ?? 0.5,
         negativePrompt: nodeData.negativePrompt,
+        specialFx: nodeData.specialFx || undefined,
         seed: nodeData.seed,
         imageUrl: imageUrl,
         endImageUrl: endImageUrl,
@@ -753,7 +754,7 @@ export function useWorkflowExecution() {
 
       try {
         // Build transitions array - one transition per pair of videos
-        const defaultTransition = { type: "slideUp" as const, duration: 0.2 };
+        const defaultTransition = { type: "none" as const, duration: 0 };
         const transitions = nodeData.transitions || [];
         const transitionsToSend =
           videoUrls.length > 1
