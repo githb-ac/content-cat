@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { toast } from "sonner";
-import { compressImage } from "@/lib/utils/image-compression";
+import { useFileUpload } from "./useFileUpload";
 
 interface UseImageUploadOptions {
   onStartImageChange?: (url: string | undefined) => void;
@@ -24,6 +24,9 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
   const [endImageUrl, setEndImageUrl] = useState<string | null>(null);
   const [isSwapping, setIsSwapping] = useState(false);
 
+  // File upload hook - uploads to /uploads/videos/ directory
+  const { upload, isUploading } = useFileUpload({ category: "videos" });
+
   // Refs for file inputs
   const startImageInputRef = useRef<HTMLInputElement>(null);
   const endImageInputRef = useRef<HTMLInputElement>(null);
@@ -39,27 +42,31 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
       if (!file) return;
 
       try {
-        // Compress and convert to base64 data URI for fal.ai API compatibility
-        const base64Url = await compressImage(file);
+        // Upload file to local storage (stored in /uploads/videos/)
+        const uploadedUrl = await upload(file);
+
+        if (!uploadedUrl) {
+          throw new Error("Upload failed");
+        }
 
         if (type === "start") {
-          setStartImageUrl(base64Url);
-          onStartImageChange?.(base64Url);
+          setStartImageUrl(uploadedUrl);
+          onStartImageChange?.(uploadedUrl);
           onModeChange?.("image-to-video");
         } else if (type === "end") {
-          setEndImageUrl(base64Url);
-          onEndImageChange?.(base64Url);
+          setEndImageUrl(uploadedUrl);
+          onEndImageChange?.(uploadedUrl);
         } else {
           // Single image upload (for non-start/end frame models)
-          onSingleImageChange?.(base64Url);
+          onSingleImageChange?.(uploadedUrl);
           onModeChange?.("image-to-video");
         }
       } catch (error) {
-        console.error("Failed to process image:", error);
-        toast.error("Failed to process image. Please try again.");
+        console.error("Failed to upload image:", error);
+        toast.error("Failed to upload image. Please try again.");
       }
     },
-    [onStartImageChange, onEndImageChange, onSingleImageChange, onModeChange]
+    [upload, onStartImageChange, onEndImageChange, onSingleImageChange, onModeChange]
   );
 
   // Clear image
@@ -161,6 +168,7 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
     startImageUrl,
     endImageUrl,
     isSwapping,
+    isUploading,
 
     // Refs
     startImageInputRef,

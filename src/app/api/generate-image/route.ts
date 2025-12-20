@@ -16,6 +16,7 @@ import {
 import { withTimeout, TIMEOUTS, TimeoutError } from "@/lib/utils/timeout";
 import { requireAuth } from "@/lib/auth-helpers";
 import { logger } from "@/lib/logger";
+import { resolveImageForFal } from "@/lib/storage";
 
 export async function POST(request: NextRequest) {
   const { user, error: authError } = await requireAuth(request);
@@ -61,19 +62,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate image sizes (max ~5MB base64 per image)
-    const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+    // Resolve local file URLs to base64 for FAL.ai
+    // (FAL.ai can't access our local /api/files/ URLs)
+    const resolvedImageUrls: string[] = [];
     if (imageUrls && Array.isArray(imageUrls)) {
       for (const url of imageUrls) {
-        if (url && url.length > MAX_IMAGE_SIZE) {
-          return NextResponse.json(
-            {
-              error:
-                "Reference image is too large. Please use a smaller image (max 5MB).",
-            },
-            { status: 400 }
-          );
+        const resolved = await resolveImageForFal(url);
+        if (resolved) {
+          resolvedImageUrls.push(resolved);
         }
+      }
+    }
+
+    // Validate image sizes (max ~5MB base64 per image)
+    const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+    for (const url of resolvedImageUrls) {
+      if (url && url.length > MAX_IMAGE_SIZE) {
+        return NextResponse.json(
+          {
+            error:
+              "Reference image is too large. Please use a smaller image (max 5MB).",
+          },
+          { status: 400 }
+        );
       }
     }
 
@@ -91,15 +102,14 @@ export async function POST(request: NextRequest) {
     const client = createNanoBananaProClient(apiKey);
 
     // Check if this is an edit request (has image URLs)
-    const hasImages =
-      imageUrls && Array.isArray(imageUrls) && imageUrls.length > 0;
+    const hasImages = resolvedImageUrls.length > 0;
 
     if (hasImages) {
       // Image editing mode with reference images (with timeout)
       const result = await withTimeout(
         client.editImage({
           prompt,
-          image_urls: imageUrls,
+          image_urls: resolvedImageUrls,
           aspect_ratio: (aspectRatio || "auto") as NanoBananaProAspectRatio,
           resolution: (resolution || "1K") as NanoBananaProResolution,
           output_format: (outputFormat || "png") as NanoBananaProOutputFormat,

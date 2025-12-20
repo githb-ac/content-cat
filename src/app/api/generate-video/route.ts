@@ -17,6 +17,7 @@ import {
 import { withTimeout, TIMEOUTS, TimeoutError } from "@/lib/utils/timeout";
 import { requireAuth } from "@/lib/auth-helpers";
 import { logger } from "@/lib/logger";
+import { resolveImageForFal } from "@/lib/storage";
 
 export async function POST(request: NextRequest) {
   const { user, error: authError } = await requireAuth(request);
@@ -91,6 +92,11 @@ export async function POST(request: NextRequest) {
       hasEndImageUrl: !!endImageUrl,
     });
 
+    // Resolve local file URLs to base64 for FAL.ai
+    // (FAL.ai can't access our local /api/files/ URLs)
+    const resolvedImageUrl = await resolveImageForFal(imageUrl);
+    const resolvedEndImageUrl = await resolveImageForFal(endImageUrl);
+
     // Generate video with timeout protection
     const generateVideo = async (): Promise<{
       video: { url: string };
@@ -99,10 +105,10 @@ export async function POST(request: NextRequest) {
       switch (modelId) {
         case "kling-2.6": {
           const client = createKling26Client(apiKey);
-          if (mode === "image-to-video" && imageUrl) {
+          if (mode === "image-to-video" && resolvedImageUrl) {
             return client.generateImageToVideo({
               prompt,
-              image_url: imageUrl,
+              image_url: resolvedImageUrl,
               duration: duration as "5" | "10",
               generate_audio: audioEnabled ?? false,
               negative_prompt: negativePrompt,
@@ -124,14 +130,14 @@ export async function POST(request: NextRequest) {
 
         case "kling-2.5-turbo": {
           const client = createKling25TurboClient(apiKey);
-          if (mode === "image-to-video" && imageUrl) {
+          if (mode === "image-to-video" && resolvedImageUrl) {
             return client.generateImageToVideo({
               prompt,
-              image_url: imageUrl,
+              image_url: resolvedImageUrl,
               duration: duration as "5" | "10",
               negative_prompt: negativePrompt,
               cfg_scale: cfgScale ?? 0.5,
-              tail_image_url: endImageUrl,
+              tail_image_url: resolvedEndImageUrl,
               seed,
             });
           } else {
@@ -148,10 +154,10 @@ export async function POST(request: NextRequest) {
 
         case "wan-2.6": {
           const client = createWan26Client(apiKey);
-          if (mode === "image-to-video" && imageUrl) {
+          if (mode === "image-to-video" && resolvedImageUrl) {
             return client.generateImageToVideo({
               prompt,
-              image_url: imageUrl,
+              image_url: resolvedImageUrl,
               duration: duration as "5" | "10" | "15",
               resolution: resolution as "720p" | "1080p",
               enable_prompt_expansion: enhanceEnabled ?? false,

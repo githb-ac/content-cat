@@ -32,6 +32,7 @@ const PROTECTED_PAGE_ROUTES = [
   "/create-character",
   "/products",
   "/prompts",
+  "/assets",
 ];
 
 // API routes that require authentication
@@ -40,6 +41,7 @@ const PROTECTED_API_PREFIXES = [
   "/api/videos",
   "/api/characters",
   "/api/products",
+  "/api/assets",
   "/api/api-keys",
   "/api/generate-image",
   "/api/generate-video",

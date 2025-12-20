@@ -1,4 +1,4 @@
-import { writeFile, mkdir, readdir, stat, unlink } from "fs/promises";
+import { writeFile, mkdir, readdir, stat, unlink, readFile } from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
@@ -121,6 +121,140 @@ export async function deleteFile(urlPath: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/**
+ * Get MIME type from file extension
+ */
+function getMimeType(filepath: string): string {
+  const ext = path.extname(filepath).toLowerCase();
+  const mimeTypes: Record<string, string> = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+    ".mp4": "video/mp4",
+    ".webm": "video/webm",
+    ".mov": "video/quicktime",
+  };
+  return mimeTypes[ext] || "application/octet-stream";
+}
+
+/**
+ * Convert a local file URL to a base64 data URI
+ * Used for sending local files to external APIs like FAL.ai
+ * Returns null if the URL is not a local file or file doesn't exist
+ */
+export async function localUrlToBase64(urlPath: string): Promise<string | null> {
+  // Only process local /api/files/ URLs
+  if (!urlPath.startsWith("/api/files/")) {
+    return null;
+  }
+
+  const filepath = getFilePath(urlPath);
+  if (!filepath || !existsSync(filepath)) {
+    return null;
+  }
+
+  try {
+    const buffer = await readFile(filepath);
+    const mimeType = getMimeType(filepath);
+    const base64 = buffer.toString("base64");
+    return `data:${mimeType};base64,${base64}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Convert an image URL to base64 for FAL.ai
+ * Handles both local file URLs and external URLs (passes through)
+ * For local URLs, converts to base64 data URI
+ * For external URLs or base64, returns as-is
+ */
+export async function resolveImageForFal(imageUrl: string | undefined): Promise<string | undefined> {
+  if (!imageUrl) return undefined;
+
+  // If it's already a base64 data URI or external URL, pass through
+  if (imageUrl.startsWith("data:") || imageUrl.startsWith("http")) {
+    return imageUrl;
+  }
+
+  // If it's a local file URL, convert to base64
+  if (imageUrl.startsWith("/api/files/")) {
+    const base64 = await localUrlToBase64(imageUrl);
+    return base64 || undefined;
+  }
+
+  // Unknown format, return as-is
+  return imageUrl;
+}
+
+export interface UploadedFile {
+  id: string;
+  url: string;
+  filename: string;
+  category: string;
+  type: "image" | "video" | "other";
+  sizeBytes: number;
+  createdAt: Date;
+}
+
+/**
+ * List all uploaded files with metadata
+ */
+export async function listUploadedFiles(): Promise<UploadedFile[]> {
+  if (!existsSync(UPLOAD_DIR)) {
+    return [];
+  }
+
+  const imageExts = [".jpg", ".jpeg", ".png", ".gif", ".webp"];
+  const videoExts = [".mp4", ".webm", ".mov"];
+  const files: UploadedFile[] = [];
+
+  async function scanCategory(category: string): Promise<void> {
+    const categoryDir = path.join(UPLOAD_DIR, category);
+    if (!existsSync(categoryDir)) return;
+
+    const entries = await readdir(categoryDir, { withFileTypes: true });
+
+    for (const entry of entries) {
+      if (!entry.isFile()) continue;
+
+      const fullPath = path.join(categoryDir, entry.name);
+      const fileStat = await stat(fullPath);
+      const ext = path.extname(entry.name).toLowerCase();
+
+      let type: "image" | "video" | "other" = "other";
+      if (imageExts.includes(ext)) {
+        type = "image";
+      } else if (videoExts.includes(ext)) {
+        type = "video";
+      }
+
+      files.push({
+        id: entry.name.replace(ext, ""), // UUID without extension
+        url: `/api/files/${category}/${entry.name}`,
+        filename: entry.name,
+        category,
+        type,
+        sizeBytes: fileStat.size,
+        createdAt: fileStat.birthtime,
+      });
+    }
+  }
+
+  // Scan all known categories
+  const categories = ["workflows", "videos", "images", "characters", "products", "general", "video-edit"];
+  for (const category of categories) {
+    await scanCategory(category);
+  }
+
+  // Sort by creation date (newest first)
+  files.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+  return files;
 }
 
 /**

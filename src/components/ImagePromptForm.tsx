@@ -23,7 +23,7 @@ import {
   MAX_IMAGE_SIZE_MB,
   MAX_IMAGES_PER_GENERATION,
 } from "@/lib/constants/image-form";
-import { compressImage } from "@/lib/utils/image-compression";
+import { useFileUpload } from "@/hooks/useFileUpload";
 import type {
   SavedCharacter,
   SavedProduct,
@@ -74,6 +74,9 @@ export default function ImagePromptForm({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const maxImages = MAX_IMAGES_PER_GENERATION;
+
+  // File upload hook - uploads to /uploads/images/ directory
+  const { upload } = useFileUpload({ category: "images" });
 
   // Auto-resize textarea
   const autoResizeTextarea = useCallback(() => {
@@ -212,14 +215,15 @@ export default function ImagePromptForm({
           type: blob.type || "image/jpeg",
         });
 
-        // Compress the image
-        const base64 = await compressImage(file);
+        // Upload the image to local storage
+        const uploadedUrl = await upload(file);
+        if (!uploadedUrl) throw new Error("Upload failed");
 
         setReferenceImages([
           {
             id,
             preview: editData.imageUrl,
-            base64,
+            url: uploadedUrl,
             isLoading: false,
           },
         ]);
@@ -231,7 +235,7 @@ export default function ImagePromptForm({
     };
 
     loadImageFromUrl();
-  }, [editData]);
+  }, [editData, upload]);
 
   const handleFileSelect = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -260,24 +264,26 @@ export default function ImagePromptForm({
       );
       e.target.value = "";
 
-      // Then compress and convert to base64, update each image
+      // Upload files to local storage
       for (const img of pendingImages) {
         try {
           if (!img.file) continue;
-          // Compress image to stay under API size limits while maintaining quality
-          const base64 = await compressImage(img.file);
+          // Upload to /uploads/images/
+          const uploadedUrl = await upload(img.file);
+          if (!uploadedUrl) throw new Error("Upload failed");
           setReferenceImages((prev) =>
             prev.map((i) =>
-              i.id === img.id ? { ...i, base64, isLoading: false } : i
+              i.id === img.id ? { ...i, url: uploadedUrl, isLoading: false } : i
             )
           );
         } catch {
           // Remove failed image
           setReferenceImages((prev) => prev.filter((i) => i.id !== img.id));
+          toast.error("Failed to upload image");
         }
       }
     },
-    [referenceImages.length]
+    [referenceImages.length, upload]
   );
 
   const removeReferenceImage = useCallback((id: string) => {
@@ -328,16 +334,16 @@ export default function ImagePromptForm({
       }
     }
 
-    // Get manually uploaded reference images (base64)
-    const uploadedImageData = referenceImages
-      .filter((img) => img.base64)
-      .map((img) => img.base64 as string);
+    // Get manually uploaded reference images (URLs from local storage)
+    const uploadedImageUrls = referenceImages
+      .filter((img) => img.url)
+      .map((img) => img.url as string);
 
     // Get character/product reference images (URLs)
     const savedReferenceImages = getSelectedReferenceImages();
 
     // Combine both - saved images first, then uploaded
-    const allReferenceImages = [...savedReferenceImages, ...uploadedImageData];
+    const allReferenceImages = [...savedReferenceImages, ...uploadedImageUrls];
 
     onSubmit?.({
       prompt,

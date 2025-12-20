@@ -199,8 +199,15 @@ function WorkflowPageContent() {
   }, [nodes, edges, workflowName]);
 
   // Debounced auto-save when there are unsaved changes
+  // Only auto-save if: existing workflow OR new workflow with actual nodes
   useEffect(() => {
     if (!hasUnsavedChanges || isLoading) return;
+
+    // Don't auto-save empty new workflows
+    if (!workflowId && nodes.length === 0) {
+      setHasUnsavedChanges(false);
+      return;
+    }
 
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -215,7 +222,7 @@ function WorkflowPageContent() {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [hasUnsavedChanges, saveWorkflow, isLoading]);
+  }, [hasUnsavedChanges, saveWorkflow, isLoading, workflowId, nodes.length]);
 
   const handleNodeClick = useCallback(
     (_event: React.MouseEvent, node: WorkflowNode) => {

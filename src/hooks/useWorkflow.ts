@@ -15,15 +15,8 @@ import type {
   NodeType,
 } from "@/components/workflow/types";
 
-// Initial nodes for demonstration
-const initialNodes: WorkflowNode[] = [
-  {
-    id: "1",
-    type: "kling26",
-    position: { x: 100, y: 100 },
-    data: { label: "Kling 2.6 Pro" },
-  },
-];
+// Start with empty canvas - user adds nodes themselves
+const initialNodes: WorkflowNode[] = [];
 
 const initialEdges: WorkflowEdge[] = [];
 

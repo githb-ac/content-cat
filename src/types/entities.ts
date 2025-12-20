@@ -31,6 +31,7 @@ export interface ReferenceImage {
   file?: File;
   preview: string;
   base64?: string;
+  url?: string;
   isLoading: boolean;
   isExisting?: boolean;
 }

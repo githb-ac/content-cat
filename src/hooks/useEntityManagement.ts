@@ -41,6 +41,8 @@ export function useEntityManagement({
   const apiPath =
     entityType === "character" ? "/api/characters" : "/api/products";
   const entityName = entityType === "character" ? "character" : "product";
+  const uploadCategory =
+    entityType === "character" ? "characters" : "products";
 
   const fetchEntities = useCallback(async () => {
     try {
@@ -64,11 +66,12 @@ export function useEntityManagement({
     async (name: string, images: UploadedImage[]) => {
       setIsCreating(true);
       try {
-        // Upload images to fal.ai storage
+        // Upload images to local storage with entity-specific category
         const formData = new FormData();
         images.forEach((img) => {
           if (img.file) formData.append("files", img.file);
         });
+        formData.append("category", uploadCategory);
 
         const uploadResponse = await apiFetch("/api/upload", {
           method: "POST",
@@ -106,7 +109,7 @@ export function useEntityManagement({
         setIsCreating(false);
       }
     },
-    [apiPath, entityName, fetchEntities]
+    [apiPath, entityName, uploadCategory, fetchEntities]
   );
 
   const handleSaveEdit = useCallback(
@@ -127,6 +130,7 @@ export function useEntityManagement({
           newFiles.forEach((img) => {
             if (img.file) formData.append("files", img.file);
           });
+          formData.append("category", uploadCategory);
 
           const uploadResponse = await apiFetch("/api/upload", {
             method: "POST",
@@ -170,7 +174,7 @@ export function useEntityManagement({
         setIsCreating(false);
       }
     },
-    [apiPath, entityName, fetchEntities]
+    [apiPath, entityName, uploadCategory, fetchEntities]
   );
 
   const handleDelete = useCallback((id: string) => {
