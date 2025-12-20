@@ -106,7 +106,7 @@ const FileNode = memo(function FileNode({
   const [duration, setDuration] = useState<string>("0:00");
   const [detectedAspectRatio, setDetectedAspectRatio] = useState<
     string | undefined
-  >(undefined);
+  >(data.aspectRatio);
   const { setNodes } = useReactFlow();
   const { upload } = useFileUpload({ category: "workflows" });
 
