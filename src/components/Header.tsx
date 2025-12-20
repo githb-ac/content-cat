@@ -13,6 +13,23 @@ const navItems = [
   { label: "Prompts", href: "/prompts" },
 ];
 
+const FolderIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <path
+      d="M14 5H2C1.44772 5 1 5.44772 1 6V12C1 12.5523 1.44772 13 2 13H14C14.5523 13 15 12.5523 15 12V6C15 5.44772 14.5523 5 14 5Z"
+      fill="currentColor"
+      fillOpacity="0.2"
+    />
+    <path
+      d="M1 6V4C1 3.44772 1.44772 3 2 3H5.5L7.5 5H14C14.5523 5 15 5.44772 15 6V12C15 12.5523 14.5523 13 14 13H2C1.44772 13 1 12.5523 1 12V6Z"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 const ExternalLinkIcon = () => (
   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
     <path
@@ -59,6 +76,15 @@ export default function Header() {
                 {item.label}
               </Link>
             ))}
+            <Link
+              href="/assets"
+              className="hidden md:grid grid-flow-col items-center justify-center gap-1 pl-2 pr-3 py-1.5 rounded-lg border border-zinc-700 bg-zinc-800 text-white transition-all hover:bg-zinc-600 hover:border-zinc-500"
+            >
+              <div className="grid items-center justify-center size-6">
+                <FolderIcon />
+              </div>
+              <span className="text-sm font-medium">Asset library</span>
+            </Link>
           </nav>
         </div>
 
@@ -74,7 +100,7 @@ export default function Header() {
             href="https://fal.ai/dashboard/billing"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-cyan-400"
+            className="btn-primary-sm"
           >
             Top Up
             <ExternalLinkIcon />

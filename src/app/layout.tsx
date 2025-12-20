@@ -28,7 +28,7 @@ export default function RootLayout({
         />
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
-          href="https://fonts.googleapis.com/css2?family=BBH+Bartle&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600&display=swap"
           rel="stylesheet"
         />
       </head>

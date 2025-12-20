@@ -147,7 +147,7 @@ function PromptCardComponent({ prompt }: { prompt: Prompt }) {
         </div>
         <button
           onClick={handleUsePrompt}
-          className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-white font-medium text-black transition-opacity hover:opacity-90 active:opacity-80"
+          className="flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-white font-medium text-black shadow-[0_4px_0_0_#a1a1aa] transition-all duration-150 hover:bg-zinc-100 hover:shadow-[0_4px_0_0_#8b8b94] active:translate-y-0.5 active:shadow-[0_2px_0_0_#a1a1aa]"
         >
           <span className="text-sm">Use Prompt</span>
         </button>

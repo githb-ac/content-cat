@@ -39,11 +39,7 @@ const RunAllButton = memo(function RunAllButton({
       <button
         onClick={onRunAll}
         disabled={isExecuting}
-        className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium shadow-lg backdrop-blur-xl transition-all duration-200 ${
-          isExecuting
-            ? "cursor-wait border-cyan-500/30 bg-cyan-500/20 text-cyan-400"
-            : "border-white/10 bg-zinc-900/90 text-white hover:border-cyan-500/50 hover:bg-zinc-800/90"
-        } `}
+        className="btn-primary"
       >
         {isExecuting ? (
           <>

@@ -53,14 +53,20 @@ export default function VideoHistoryView({
 
           {/* Empty state if no videos and not loading */}
           {!isLoading && videos.length === 0 && pendingCount === 0 && (
-            <div className="flex h-64 flex-col items-center justify-center rounded-2xl border border-zinc-800 bg-zinc-900/50">
-              <div className="text-zinc-600">
-                <VideoIcon />
+            <div className="flex h-full w-full items-center justify-center py-16">
+              <div className="flex flex-col items-center justify-center gap-4">
+                <div className="grid h-32 w-52 items-center justify-center rounded-xl bg-zinc-800/50">
+                  <div className="text-zinc-600">
+                    <VideoIcon />
+                  </div>
+                </div>
+                <h2 className="font-heading text-center text-2xl font-bold text-white uppercase">
+                  Nothing Here Yet
+                </h2>
+                <p className="text-center text-sm text-gray-400">
+                  Add an image and hit generate
+                </p>
               </div>
-              <p className="mt-3 text-sm text-zinc-500">No videos yet</p>
-              <p className="text-xs text-zinc-600">
-                Generate your first video to get started
-              </p>
             </div>
           )}
         </ul>

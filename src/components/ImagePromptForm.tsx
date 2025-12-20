@@ -592,7 +592,7 @@ export default function ImagePromptForm({
             type="submit"
             disabled={isImagesLoading}
             tabIndex={-1}
-            className="inline-grid h-full w-36 grid-flow-col items-center justify-center gap-2 rounded-xl bg-cyan-400 px-2.5 text-sm font-semibold text-black transition hover:bg-cyan-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400"
+            className="inline-grid h-full w-36 grid-flow-col items-center justify-center gap-2 rounded-lg bg-cyan-400 px-2.5 text-sm font-semibold text-black shadow-[0_4px_0_0_#0e7490] transition-all duration-150 hover:bg-cyan-500 hover:shadow-[0_4px_0_0_#0c6478] focus:outline-none active:translate-y-0.5 active:shadow-[0_2px_0_0_#0e7490] disabled:cursor-not-allowed disabled:bg-zinc-700 disabled:text-zinc-400 disabled:shadow-[0_4px_0_0_#3f3f46]"
           >
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold">

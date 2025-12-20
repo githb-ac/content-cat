@@ -172,7 +172,7 @@ export default function EntityManagementPage({
         <button
           onClick={() => setIsUploadModalOpen(true)}
           disabled={isCreating}
-          className="mb-4 flex cursor-pointer items-center gap-2 rounded-lg bg-cyan-400 px-6 py-3 font-semibold text-black shadow-lg shadow-cyan-400/25 transition-all duration-300 hover:bg-cyan-500 hover:shadow-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+          className="btn-primary mb-4"
         >
           <span>✦</span>
           {isCreating ? buttonLoadingText : buttonText}

@@ -167,6 +167,18 @@ const PromptsIcon = () => (
   </svg>
 );
 
+const AssetsIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+    <path
+      d="M3 9V6C3 5.44772 3.44772 5 4 5H9L11 7H20C20.5523 7 21 7.44772 21 8V18C21 18.5523 20.5523 19 20 19H4C3.44772 19 3 18.5523 3 18V9Z"
+      stroke="currentColor"
+      strokeWidth="1.125"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 const HomeIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
     <path
@@ -228,6 +240,7 @@ const toolbarItems: ToolbarItem[] = [
     icon: <ProductsIcon />,
   },
   { id: "prompts", label: "Prompts", href: "/prompts", icon: <PromptsIcon /> },
+  { id: "assets", label: "Assets", href: "/assets", icon: <AssetsIcon /> },
 ];
 
 export default function WorkflowToolbar() {
