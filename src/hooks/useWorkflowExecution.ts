@@ -399,6 +399,24 @@ export function useWorkflowExecution() {
           isGenerating: false,
         });
 
+        // Save the generated image to the database so it appears in assets
+        if (generatedImageUrl) {
+          try {
+            await apiFetch("/api/images", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                url: generatedImageUrl,
+                prompt,
+                aspectRatio: nodeData.aspectRatio || "1:1",
+              }),
+            });
+          } catch (saveError) {
+            console.error("[Execution] Failed to save image to database:", saveError);
+            // Don't fail the execution if saving fails - the image was still generated
+          }
+        }
+
         return { success: true, data: result };
       } catch {
         updateNodeData(nodeId, { isGenerating: false });
