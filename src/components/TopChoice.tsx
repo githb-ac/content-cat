@@ -1,17 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useRef } from "react";
-import {
-  ReactCompareSlider,
-  ReactCompareSliderImage,
-} from "react-compare-slider";
 
 interface ToolCard {
   title: string;
   description: string;
   image: string;
-  imageAfter?: string;
+  imageAfter: string;
   href: string;
   badge?: {
     text: string;
@@ -30,8 +25,8 @@ const toolCards: ToolCard[] = [
   {
     title: "Upscale",
     description: "Enhance resolution up to 8x",
-    image: "/images/upscale-before.jpg",
-    imageAfter: "/images/upscale-after.jpg",
+    image: "/images/upscale-after.jpg",
+    imageAfter: "/images/upscale-before.jpg",
     href: "/tools/upscale",
     badge: { text: "PRO", variant: "pro" },
   },
@@ -87,111 +82,6 @@ const badgeStyles = {
   new: "bg-zinc-600",
 };
 
-function AnimatedCompareSlider({
-  image,
-  imageAfter,
-  title,
-}: {
-  image: string;
-  imageAfter: string;
-  title: string;
-}) {
-  const [isPaused, setIsPaused] = useState(false);
-
-  // Initialize animation state - fixed value for SSR
-  const [animationState, setAnimationState] = useState(() => ({
-    position: 50,
-    direction: 1,
-    speed: 0.3,
-  }));
-
-  const hasInitialized = useRef(false);
-
-  // Animation effect - handles both initialization and updates
-  useEffect(() => {
-    // Initialize with random values once (client-side only)
-    if (!hasInitialized.current) {
-      hasInitialized.current = true;
-      // Generate random values inside effect to satisfy ESLint purity rules
-      const randomPosition = Math.random() * 60 + 20; // Random start 20-80
-      const randomDirection = Math.random() > 0.5 ? 1 : -1;
-      const randomSpeed = Math.random() * 0.3 + 0.15; // Random speed 0.15-0.45
-
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Intentional one-time initialization after mount to avoid SSR hydration mismatch with random values
-      setAnimationState({
-        position: randomPosition,
-        direction: randomDirection,
-        speed: randomSpeed,
-      });
-      return;
-    }
-
-    // Animation loop (after initialization)
-    if (isPaused) return;
-
-    const interval = setInterval(() => {
-      setAnimationState((prev) => {
-        let nextPosition = prev.position + prev.direction * prev.speed;
-        let nextDirection = prev.direction;
-
-        // Bounce at edges
-        if (nextPosition >= 85) {
-          nextDirection = -1;
-          nextPosition = 85;
-        } else if (nextPosition <= 15) {
-          nextDirection = 1;
-          nextPosition = 15;
-        }
-
-        return {
-          ...prev,
-          position: nextPosition,
-          direction: nextDirection,
-        };
-      });
-    }, 16); // ~60fps
-
-    return () => clearInterval(interval);
-  }, [isPaused]);
-
-  return (
-    <div
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-    >
-      <ReactCompareSlider
-        itemOne={
-          <ReactCompareSliderImage
-            src={image}
-            alt={`${title} before`}
-            style={{ objectFit: "cover", width: "100%", height: "100%" }}
-          />
-        }
-        itemTwo={
-          <ReactCompareSliderImage
-            src={imageAfter}
-            alt={`${title} after`}
-            style={{ objectFit: "cover", width: "100%", height: "100%" }}
-          />
-        }
-        handle={
-          <div
-            style={{
-              width: 2,
-              height: "100%",
-              backgroundColor: "white",
-              boxShadow: "0 0 4px rgba(0,0,0,0.5)",
-            }}
-          />
-        }
-        style={{ width: "100%", height: "100%" }}
-        position={animationState.position}
-        onlyHandleDraggable
-      />
-    </div>
-  );
-}
-
 export default function TopChoice() {
   return (
     <section className="mt-8 flex flex-col gap-4">
@@ -215,26 +105,26 @@ export default function TopChoice() {
           <Link
             key={card.title}
             href={card.href}
-            className="group h-56 w-[17%] min-w-[160px] flex-shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl transition-colors duration-300 hover:bg-black/50 hover:border-white/20"
+            className="group h-56 w-[17%] min-w-[160px] flex-shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl transition-colors duration-300 hover:border-white/20 hover:bg-black/50"
           >
             <div className="relative h-40 w-full overflow-hidden bg-black/20">
-              {card.imageAfter ? (
-                <AnimatedCompareSlider
-                  image={card.image}
-                  imageAfter={card.imageAfter}
-                  title={card.title}
-                />
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={card.image}
-                  alt={card.title}
-                  className="h-full w-full object-cover"
-                />
-              )}
+              {/* Before image */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={card.image}
+                alt={`${card.title} before`}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              {/* After image with right-to-left gradient fade reveal on hover */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={card.imageAfter}
+                alt={`${card.title} after`}
+                className="absolute inset-0 h-full w-full object-cover transition-[mask-position] duration-700 ease-out [mask-image:linear-gradient(to_left,black_0%,black_60%,transparent_100%)] [mask-position:100%_0] [mask-repeat:no-repeat] [mask-size:200%_100%] group-hover:[mask-position:-50%_0]"
+              />
               {card.badge && (
                 <span
-                  className={`${badgeStyles[card.badge.variant]} absolute top-3 left-3 z-10 rounded px-2 py-0.5 text-[10px] font-medium text-white`}
+                  className={`${badgeStyles[card.badge.variant]} absolute left-3 top-3 z-10 rounded px-2 py-0.5 text-[10px] font-medium text-white`}
                 >
                   {card.badge.text}
                 </span>
