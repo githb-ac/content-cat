@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { toast } from "sonner";
 import { NestedDropdown, SimpleDropdown } from "@/components/Dropdown";
 import type {
   VideoModelId,
@@ -14,7 +15,6 @@ import { ChevronDownIcon, InfoIcon, EditIcon } from "../icons";
 import { getModelGroups } from "../constants";
 import ImageUploadSection from "./ImageUploadSection";
 import PromptSection from "./PromptSection";
-import PresetSelector from "@/components/PresetSelector";
 
 interface CreateVideoFormProps {
   // Video state
@@ -58,8 +58,7 @@ export default function CreateVideoForm({
   onSwapImages,
 }: CreateVideoFormProps) {
   // Local UI state
-  const [showPresetSelector, setShowPresetSelector] = useState(false);
-  const [selectedPreset, setSelectedPreset] = useState("General");
+  const [selectedPreset] = useState("General");
 
   // Dropdown visibility states
   const [showModelDropdown, setShowModelDropdown] = useState(false);
@@ -122,22 +121,12 @@ export default function CreateVideoForm({
     { id: "rocketrocket", label: "Rocket" },
   ];
 
-  if (showPresetSelector) {
-    return (
-      <PresetSelector
-        isOpen={showPresetSelector}
-        onClose={() => setShowPresetSelector(false)}
-        onSelectPreset={(preset) => setSelectedPreset(preset)}
-      />
-    );
-  }
-
   return (
     <>
       {/* Preset Card */}
       <figure
         className="group relative aspect-[2.3] w-full cursor-pointer overflow-hidden rounded-xl select-none"
-        onClick={() => setShowPresetSelector(true)}
+        onClick={() => toast.info("Coming soon")}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-teal-900 via-teal-800 to-amber-900" />
         <div
@@ -157,7 +146,7 @@ export default function CreateVideoForm({
           className="absolute top-1.5 right-1.5 z-20 flex h-6 items-center gap-1 rounded-lg border border-white/10 bg-black/60 px-2 text-xs text-white backdrop-blur-sm transition-colors hover:bg-pink-400 hover:text-black"
           onClick={(e) => {
             e.stopPropagation();
-            setShowPresetSelector(true);
+            toast.info("Coming soon");
           }}
         >
           <EditIcon />
