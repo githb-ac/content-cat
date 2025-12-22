@@ -291,10 +291,6 @@ EOF
 
     # Find available port
     local PORT=$(find_available_port)
-    printf "  ${DIM}Open in browser:${RESET}  ${BR_WHITE}http://localhost:${PORT}${RESET}\n"
-    echo ""
-    printf "  ${BR_BLACK}─────────────────────────────────────────────────────────────────${RESET}\n"
-    echo ""
 
     # Setup
     ensure_env
@@ -305,6 +301,31 @@ EOF
         sleep 1
         ensure_schema
     fi
+
+    # Check if first-time setup is needed
+    local SETUP_URL=""
+    if command_exists curl; then
+        # Start server briefly to check setup status
+        pnpm dev --port "$PORT" &>/dev/null &
+        local DEV_PID=$!
+        sleep 3
+
+        local SETUP_CHECK=$(curl -s "http://localhost:${PORT}/api/auth/setup" 2>/dev/null || echo '{}')
+        if echo "$SETUP_CHECK" | grep -q '"setupRequired":true'; then
+            SETUP_URL="/login"
+        fi
+
+        kill $DEV_PID 2>/dev/null || true
+        wait $DEV_PID 2>/dev/null || true
+    fi
+
+    printf "  ${DIM}Open in browser:${RESET}  ${BR_WHITE}http://localhost:${PORT}${SETUP_URL}${RESET}\n"
+    if [[ -n "$SETUP_URL" ]]; then
+        printf "  ${BR_YELLOW}!${RESET} ${DIM}First time? Create your account to get started${RESET}\n"
+    fi
+    echo ""
+    printf "  ${BR_BLACK}─────────────────────────────────────────────────────────────────${RESET}\n"
+    echo ""
 
     exec pnpm dev --port "$PORT"
 }
