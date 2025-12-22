@@ -16,6 +16,7 @@ import {
 import DeleteConfirmationModal from "@/components/DeleteConfirmationModal";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useImages } from "@/hooks";
+import { useGenerationStore } from "@/lib/stores/generationStore";
 
 export default function ImagePage() {
   return (
@@ -48,7 +49,15 @@ function ImagePageContent() {
   const initialCharacterId = searchParams.get("characterId") || undefined;
   const initialProductId = searchParams.get("productId") || undefined;
   const initialSubModel = initialCharacterId || initialProductId || undefined;
-  const [pendingCount, setPendingCount] = useState(0);
+
+  // Use global store for pending count to persist across navigation
+  const {
+    pendingImageGenerations,
+    addImageGeneration,
+    removeImageGeneration,
+  } = useGenerationStore();
+  const pendingCount = pendingImageGenerations.length;
+
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
   const [selectedImage, setSelectedImage] = useState<GeneratedImage | null>(
     null
@@ -112,14 +121,20 @@ function ImagePageContent() {
     outputFormat: string;
     referenceImages: string[];
   }) => {
-    // Add to pending count immediately (fire-and-forget style)
-    setPendingCount((prev) => prev + data.count);
+    // Create unique IDs for each pending generation and add to global store
+    const generationIds: string[] = [];
+    for (let i = 0; i < data.count; i++) {
+      const id = `img-${Date.now()}-${i}`;
+      generationIds.push(id);
+      addImageGeneration(id, data.prompt);
+    }
 
     // Process generation in background without blocking
     const generateImages = async () => {
       let successCount = 0;
 
       for (let i = 0; i < data.count; i++) {
+        const generationId = generationIds[i];
         try {
           const response = await apiFetch("/api/generate-image", {
             method: "POST",
@@ -140,8 +155,8 @@ function ImagePageContent() {
 
           if (!response.ok) {
             toast.error(result.error || "Failed to generate image");
-            // Decrement pending count for this failed generation
-            setPendingCount((prev) => Math.max(0, prev - 1));
+            // Remove from global store on failure
+            removeImageGeneration(generationId);
             continue; // Try next one instead of breaking
           }
 
@@ -167,16 +182,16 @@ function ImagePageContent() {
             }
           }
 
-          // Decrement pending count after successful generation
-          setPendingCount((prev) => Math.max(0, prev - 1));
+          // Remove from global store after successful generation
+          removeImageGeneration(generationId);
         } catch (err) {
           toast.error(
             err instanceof Error
               ? err.message
               : "Something went wrong. Try again."
           );
-          // Decrement pending count for this failed generation
-          setPendingCount((prev) => Math.max(0, prev - 1));
+          // Remove from global store on failure
+          removeImageGeneration(generationId);
         }
       }
 
@@ -192,8 +207,8 @@ function ImagePageContent() {
       // Catch any unhandled errors to prevent crashes
       console.error("Unhandled error in image generation:", error);
       toast.error("An unexpected error occurred. Please try again.");
-      // Reset pending count on catastrophic failure
-      setPendingCount(0);
+      // Clear all generations for this batch on catastrophic failure
+      generationIds.forEach((id) => removeImageGeneration(id));
     });
   };
 

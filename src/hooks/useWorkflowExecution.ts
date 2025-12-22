@@ -18,6 +18,7 @@ import type {
   VideoTrimNodeData,
   VideoTransitionNodeData,
 } from "@/components/workflow/types";
+import { useGenerationStore } from "@/lib/stores/generationStore";
 
 // Image compression constants (matching image-compression.ts)
 const MAX_BASE64_SIZE = 4 * 1024 * 1024; // 4MB target for base64
@@ -163,6 +164,16 @@ const EXECUTABLE_NODE_TYPES = new Set([
 
 export function useWorkflowExecution() {
   const { getNodes, getEdges, setNodes } = useReactFlow();
+
+  // Use global store for executing node IDs to persist across navigation
+  const {
+    pendingWorkflowNodes,
+    addWorkflowNode,
+    removeWorkflowNode,
+    clearWorkflowNodes,
+  } = useGenerationStore();
+  const globalExecutingNodeIds = pendingWorkflowNodes.map((n) => n.nodeId);
+
   const [state, setState] = useState<ExecutionState>({
     isExecuting: false,
     executingNodeId: null,
@@ -1307,13 +1318,16 @@ export function useWorkflowExecution() {
       }))
     );
 
+    // Clear global store
+    clearWorkflowNodes();
+
     setState({
       isExecuting: false,
       executingNodeId: null,
       executingNodeIds: [],
       error: "Execution stopped by user",
     });
-  }, [setNodes]);
+  }, [setNodes, clearWorkflowNodes]);
 
   /**
    * Execute all nodes in the workflow using DAG-based parallel execution
@@ -1391,6 +1405,8 @@ export function useWorkflowExecution() {
       if (abortRef.current) return;
 
       executing.add(nodeId);
+      // Add to global store for persistence across navigation
+      addWorkflowNode(nodeId);
       setState((prev) => ({
         ...prev,
         executingNodeIds: [...prev.executingNodeIds, nodeId],
@@ -1414,6 +1430,8 @@ export function useWorkflowExecution() {
         }
       } finally {
         executing.delete(nodeId);
+        // Remove from global store
+        removeWorkflowNode(nodeId);
         if (!abortRef.current) {
           setState((prev) => ({
             ...prev,
@@ -1490,7 +1508,7 @@ export function useWorkflowExecution() {
       failed: failed.size,
       errors,
     };
-  }, [getNodes, getEdges, getUpstreamExecutableNodes, executeNode]);
+  }, [getNodes, getEdges, getUpstreamExecutableNodes, executeNode, addWorkflowNode, removeWorkflowNode]);
 
   /**
    * Check if a node can be executed (has required inputs)
@@ -1575,15 +1593,21 @@ export function useWorkflowExecution() {
     [getNodes, getConnectedInputs, extractPrompt, extractVideoUrl]
   );
 
+  // Combine local and global executing node IDs for UI
+  // Global store persists across navigation, local state is for current session
+  const combinedExecutingNodeIds = [
+    ...new Set([...state.executingNodeIds, ...globalExecutingNodeIds]),
+  ];
+
   return {
     executeNode,
     executeAll,
     stopExecution,
     canExecuteNode,
     getConnectedInputs,
-    isExecuting: state.isExecuting,
+    isExecuting: state.isExecuting || globalExecutingNodeIds.length > 0,
     executingNodeId: state.executingNodeId,
-    executingNodeIds: state.executingNodeIds,
+    executingNodeIds: combinedExecutingNodeIds,
     error: state.error,
   };
 }

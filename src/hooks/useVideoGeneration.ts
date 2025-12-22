@@ -14,6 +14,7 @@ import {
   type VideoResolution,
 } from "@/lib/fal";
 import type { GeneratedVideo } from "@/components/video";
+import { useGenerationStore } from "@/lib/stores/generationStore";
 
 interface UseVideoGenerationOptions {
   onVideoGenerated?: (video: GeneratedVideo) => void;
@@ -26,7 +27,14 @@ export function useVideoGeneration(options: UseVideoGenerationOptions = {}) {
   const [videoState, setVideoState] = useState<VideoGenerationState>(
     getDefaultState("kling-2.6")
   );
-  const [pendingCount, setPendingCount] = useState(0);
+
+  // Use global store for pending count to persist across navigation
+  const {
+    pendingVideoGenerations,
+    addVideoGeneration,
+    removeVideoGeneration,
+  } = useGenerationStore();
+  const pendingCount = pendingVideoGenerations.length;
 
   // Get current model config and price
   const modelConfig = getModelConfig(videoState.model);
@@ -93,8 +101,9 @@ export function useVideoGeneration(options: UseVideoGenerationOptions = {}) {
       return false;
     }
 
-    // Add skeleton
-    setPendingCount((prev) => prev + 1);
+    // Create unique ID and add to global store
+    const generationId = `vid-${Date.now()}`;
+    addVideoGeneration(generationId, videoState.prompt);
 
     // Fire-and-forget generation
     const generateVideo = async () => {
@@ -122,7 +131,7 @@ export function useVideoGeneration(options: UseVideoGenerationOptions = {}) {
 
         if (!response.ok) {
           toast.error(result.error || "Failed to generate video");
-          setPendingCount((prev) => Math.max(0, prev - 1));
+          removeVideoGeneration(generationId);
           return;
         }
 
@@ -131,12 +140,12 @@ export function useVideoGeneration(options: UseVideoGenerationOptions = {}) {
           toast.success("Video generated successfully!");
         }
 
-        setPendingCount((prev) => Math.max(0, prev - 1));
+        removeVideoGeneration(generationId);
       } catch (err) {
         toast.error(
           err instanceof Error ? err.message : "Something went wrong"
         );
-        setPendingCount((prev) => Math.max(0, prev - 1));
+        removeVideoGeneration(generationId);
       }
     };
 
@@ -145,11 +154,11 @@ export function useVideoGeneration(options: UseVideoGenerationOptions = {}) {
       // Catch any unhandled errors to prevent crashes
       console.error("Unhandled error in video generation:", error);
       toast.error("An unexpected error occurred. Please try again.");
-      setPendingCount((prev) => Math.max(0, prev - 1));
+      removeVideoGeneration(generationId);
     });
 
     return true;
-  }, [videoState, onVideoGenerated]);
+  }, [videoState, onVideoGenerated, addVideoGeneration, removeVideoGeneration]);
 
   // Handle rerun with settings from a video
   const handleRerunVideo = useCallback((video: GeneratedVideo) => {

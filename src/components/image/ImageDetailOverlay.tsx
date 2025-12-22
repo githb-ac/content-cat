@@ -100,6 +100,7 @@ export default function ImageDetailOverlay({
             fill
             priority
             loading="eager"
+            unoptimized
             sizes="(max-width: 768px) 100vw, 80vw"
             className="pointer-events-none [border-radius:12px] object-contain"
           />
