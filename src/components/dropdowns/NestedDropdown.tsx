@@ -18,8 +18,8 @@ export function NestedDropdown({
   onClose,
   triggerRef,
 }: NestedDropdownProps) {
-  const [activeGroup, setActiveGroup] = useState<string | null>(null);
-  const [subMenuPosition, setSubMenuPosition] = useState({ top: 0, left: 0 });
+  // Track which group user has hovered over (null means use default based on selected value)
+  const [hoveredGroup, setHoveredGroup] = useState<string | null>(null);
 
   // Find which group contains the current value
   const currentGroup = groups.find((g) =>
@@ -28,34 +28,29 @@ export function NestedDropdown({
 
   const handleClose = () => {
     onClose();
-    setActiveGroup(null);
+    setHoveredGroup(null);
   };
 
-  const { dropdownRef, position } = useDropdownPosition({
+  const { dropdownRef, position, isPositioned } = useDropdownPosition({
     isOpen,
     triggerRef,
     onClose: handleClose,
   });
 
-  // Set active group when dropdown opens with a selected value
-  const activeGroupOnOpen = isOpen && currentGroup ? currentGroup.id : null;
-  if (
-    activeGroupOnOpen &&
-    activeGroup !== activeGroupOnOpen &&
-    activeGroup === null
-  ) {
-    setActiveGroup(activeGroupOnOpen);
-  }
-
   const handleGroupHover = (groupId: string) => {
-    setActiveGroup(groupId);
-    setSubMenuPosition({
-      top: position.top,
-      left: position.left + 192 + 8, // w-48 (192px) + 8px gap
-    });
+    setHoveredGroup(groupId);
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !isPositioned) return null;
+
+  // Determine which group to show: hovered group takes precedence, otherwise show current value's group
+  const activeGroup = hoveredGroup ?? currentGroup?.id ?? null;
+
+  // Derive submenu position from main dropdown position
+  const subMenuPosition = {
+    top: position.top,
+    left: position.left + 192 + 8, // w-48 (192px) + 8px gap
+  };
 
   const activeGroupData = groups.find((g) => g.id === activeGroup);
 

@@ -17,13 +17,13 @@ export function SimpleDropdown({
   onClose,
   triggerRef,
 }: SimpleDropdownProps) {
-  const { dropdownRef, position } = useDropdownPosition({
+  const { dropdownRef, position, isPositioned } = useDropdownPosition({
     isOpen,
     triggerRef,
     onClose,
   });
 
-  if (!isOpen) return null;
+  if (!isOpen || !isPositioned) return null;
 
   return createPortal(
     <div

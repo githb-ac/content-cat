@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, RefObject } from "react";
+import { useState, useEffect, useRef, RefObject, useLayoutEffect } from "react";
 
 interface UseDropdownPositionOptions {
   isOpen: boolean;
@@ -20,7 +20,13 @@ interface DropdownPosition {
 interface UseDropdownPositionReturn {
   dropdownRef: RefObject<HTMLDivElement>;
   position: DropdownPosition;
+  /** Whether position has been calculated and is ready for rendering */
+  isPositioned: boolean;
 }
+
+// Use useLayoutEffect on client, useEffect on server
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export function useDropdownPosition({
   isOpen,
@@ -34,9 +40,10 @@ export function useDropdownPosition({
     top: 0,
     left: 0,
   });
+  const [isPositioned, setIsPositioned] = useState(false);
 
-  // Calculate position when dropdown opens
-  useEffect(() => {
+  // Calculate position synchronously before paint using useLayoutEffect
+  useIsomorphicLayoutEffect(() => {
     if (isOpen && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
 
@@ -59,6 +66,9 @@ export function useDropdownPosition({
           left: rect.right + 8,
         });
       }
+      setIsPositioned(true);
+    } else {
+      setIsPositioned(false);
     }
   }, [isOpen, triggerRef, adjustForViewport, maxHeight]);
 
@@ -87,5 +97,6 @@ export function useDropdownPosition({
   return {
     dropdownRef: dropdownRef as RefObject<HTMLDivElement>,
     position,
+    isPositioned,
   };
 }

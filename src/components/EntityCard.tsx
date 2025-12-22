@@ -36,8 +36,8 @@ export default memo(function EntityCard({
   );
 
   return (
-    <div className="group relative" style={{ contain: "layout style" }}>
-      <div className="relative h-72 w-48 overflow-hidden rounded-xl border border-white/10 bg-black/40">
+    <div className="group relative flex-shrink-0" style={{ contain: "layout style" }}>
+      <div className="relative h-72 w-48 overflow-hidden rounded-xl bg-zinc-800">
         {entity.thumbnailUrl ? (
           <>
             {/* Skeleton while loading */}

@@ -63,6 +63,7 @@ export default function EntityManagementPage({
     entities,
     isLoading,
     isCreating,
+    hasFetched,
     editingEntity,
     deleteEntityId,
     handleCreate,
@@ -178,28 +179,14 @@ export default function EntityManagementPage({
           {isCreating ? buttonLoadingText : buttonText}
         </button>
 
-        {/* Content Container - uses opacity transitions instead of unmounting */}
-        <div className="w-full max-w-4xl">
-          {/* Loading Skeletons */}
+        {/* Content Grid - all sections stacked, toggle visibility with opacity */}
+        <div className="relative grid w-full [&>*]:col-start-1 [&>*]:row-start-1">
+          {/* Saved Entities Section - show if entities exist */}
           <div
-            className={`flex flex-wrap justify-center gap-4 transition-opacity duration-200 ${
-              isLoading ? "opacity-100" : "pointer-events-none absolute opacity-0"
-            }`}
-          >
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div
-                key={`skeleton-${index}`}
-                className="skeleton-loader h-72 w-48 rounded-xl"
-              />
-            ))}
-          </div>
-
-          {/* Saved Entities Section */}
-          <div
-            className={`flex flex-wrap justify-center gap-4 transition-opacity duration-200 ${
-              !isLoading && entities.length > 0
+            className={`flex w-full justify-center gap-4 transition-opacity duration-200 ${
+              entities.length > 0
                 ? "opacity-100"
-                : "pointer-events-none absolute opacity-0"
+                : "pointer-events-none opacity-0"
             }`}
           >
             {entities.map((entity) => (
@@ -214,11 +201,12 @@ export default function EntityManagementPage({
           </div>
 
           {/* Empty State / Gallery Section */}
+          {/* Only show after fetch confirms no entities exist to prevent flicker */}
           <div
-            className={`flex justify-center gap-4 overflow-x-auto pb-2 transition-opacity duration-200 ${
-              !isLoading && entities.length === 0
+            className={`flex w-full justify-center gap-4 transition-opacity duration-200 ${
+              hasFetched && !isLoading && entities.length === 0
                 ? "opacity-100"
-                : "pointer-events-none absolute opacity-0"
+                : "pointer-events-none opacity-0"
             }`}
           >
             {galleryImages.map((item) => (

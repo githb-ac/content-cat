@@ -14,6 +14,7 @@ interface UseEntityManagementReturn {
   entities: Entity[];
   isLoading: boolean;
   isCreating: boolean;
+  hasFetched: boolean;
   editingEntity: Entity | null;
   deleteEntityId: string | null;
   fetchEntities: () => Promise<void>;
@@ -34,6 +35,7 @@ export function useEntityManagement({
 }: UseEntityManagementOptions): UseEntityManagementReturn {
   const [entities, setEntities] = useState<Entity[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasFetched, setHasFetched] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [editingEntity, setEditingEntity] = useState<Entity | null>(null);
   const [deleteEntityId, setDeleteEntityId] = useState<string | null>(null);
@@ -55,6 +57,7 @@ export function useEntityManagement({
       // Silently fail - entities will show empty state
     } finally {
       setIsLoading(false);
+      setHasFetched(true);
     }
   }, [apiPath]);
 
@@ -208,6 +211,7 @@ export function useEntityManagement({
     entities,
     isLoading,
     isCreating,
+    hasFetched,
     editingEntity,
     deleteEntityId,
     fetchEntities,

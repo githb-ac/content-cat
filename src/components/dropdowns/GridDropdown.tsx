@@ -17,7 +17,7 @@ export const GridDropdown = memo(function GridDropdown({
   onClose,
   triggerRef,
 }: GridDropdownProps) {
-  const { dropdownRef, position } = useDropdownPosition({
+  const { dropdownRef, position, isPositioned } = useDropdownPosition({
     isOpen,
     triggerRef,
     onClose,
@@ -33,7 +33,7 @@ export const GridDropdown = memo(function GridDropdown({
     [onChange, onClose]
   );
 
-  if (!isOpen) return null;
+  if (!isOpen || !isPositioned) return null;
 
   return createPortal(
     <div
