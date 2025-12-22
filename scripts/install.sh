@@ -400,7 +400,7 @@ setup_database() {
         done
         sleep 2
 
-        run_step "Setting up schema" pnpm prisma db push --skip-generate
+        run_step "Setting up schema" pnpm prisma db push
     else
         warn "Docker unavailable - run 'content-cat' to complete"
     fi
