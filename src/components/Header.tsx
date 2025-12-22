@@ -93,9 +93,14 @@ export default function Header() {
     <>
       <header className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-8">
-          <Link href="/" className="font-heading gradient-shift text-xl">
-            Content Cat
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/" className="font-heading gradient-shift text-xl">
+              Content Cat
+            </Link>
+            <span className="rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-medium text-zinc-400">
+              v2.1.0
+            </span>
+          </div>
           <nav className="flex items-center gap-6">
             {navItems.map((item) => (
               <Link
