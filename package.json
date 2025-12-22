@@ -2,6 +2,8 @@
   "name": "content-cat",
   "version": "0.1.0",
   "private": true,
+  "license": "AGPL-3.0-only",
+  "author": "Ken Kai",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
