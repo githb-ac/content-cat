@@ -262,9 +262,9 @@ function WorkflowCanvasInner({
       >
         <Background
           variant={BackgroundVariant.Dots}
-          gap={16}
-          size={1}
-          color="#2a2a2e"
+          gap={20}
+          size={2}
+          color="#404048"
         />
         <WorkflowBottomToolbar
           currentWorkflowId={currentWorkflowId}

@@ -414,7 +414,25 @@ function UploadedAssetCard({
 }) {
   const isVideo = asset.type === "video";
   const [isLoaded, setIsLoaded] = useState(!isVideo); // Videos without thumbnails load immediately
+  const [isVideoLoading, setIsVideoLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  const handlePlayPause = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isPlaying) {
+      setIsPlaying(false);
+      setIsVideoLoading(false);
+    } else if (isVideoLoading) {
+      setIsVideoLoading(false);
+    } else {
+      setIsVideoLoading(true);
+    }
+  };
+
+  const handleVideoReady = () => {
+    setIsVideoLoading(false);
+    setIsPlaying(true);
+  };
 
   return (
     <figure
@@ -433,35 +451,49 @@ function UploadedAssetCard({
 
       {isVideo ? (
         <>
-          {/* Video only rendered when playing */}
-          {isPlaying && (
+          {/* Video - rendered when loading or playing */}
+          {(isVideoLoading || isPlaying) && (
             <video
               src={asset.url}
-              className="absolute inset-0 size-full object-cover z-10"
+              className={`absolute inset-0 size-full object-cover z-10 pointer-events-none transition-opacity duration-200 ${
+                isPlaying ? "opacity-100" : "opacity-0"
+              }`}
               muted
               playsInline
               autoPlay
               loop
-              onEnded={() => setIsPlaying(false)}
+              onCanPlay={handleVideoReady}
             />
           )}
-          {/* Video placeholder with play button */}
+          {/* Video placeholder - visible until playing */}
           {!isPlaying && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-zinc-900">
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsPlaying(true);
-                }}
-                className="flex size-12 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition hover:bg-white/30 hover:scale-110"
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M8 5.14v14l11-7-11-7z" />
-                </svg>
-              </button>
-            </div>
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-zinc-900" />
           )}
+          {/* Play/Pause/Loading button overlay */}
+          <button
+            type="button"
+            onClick={handlePlayPause}
+            className={`absolute inset-0 z-15 flex items-center justify-center transition-opacity ${
+              isPlaying ? "opacity-0 hover:opacity-100" : "opacity-100"
+            }`}
+          >
+            <div className="flex size-12 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition hover:bg-white/30 hover:scale-110">
+              {isVideoLoading ? (
+                <div className="size-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              ) : (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  {isPlaying ? (
+                    <>
+                      <rect x="6" y="5" width="4" height="14" rx="1" />
+                      <rect x="14" y="5" width="4" height="14" rx="1" />
+                    </>
+                  ) : (
+                    <path d="M8 5.14v14l11-7-11-7z" />
+                  )}
+                </svg>
+              )}
+            </div>
+          </button>
         </>
       ) : (
         <Image
@@ -526,7 +558,25 @@ function GeneratedAssetCard({
   const thumbnailUrl = asset.thumbnailUrl || null;
   // If video without thumbnail, consider it "loaded" immediately
   const [isLoaded, setIsLoaded] = useState(isVideo && !thumbnailUrl);
+  const [isVideoLoading, setIsVideoLoading] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+
+  const handlePlayPause = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isPlaying) {
+      setIsPlaying(false);
+      setIsVideoLoading(false);
+    } else if (isVideoLoading) {
+      setIsVideoLoading(false);
+    } else {
+      setIsVideoLoading(true);
+    }
+  };
+
+  const handleVideoReady = () => {
+    setIsVideoLoading(false);
+    setIsPlaying(true);
+  };
 
   return (
     <figure
@@ -545,19 +595,21 @@ function GeneratedAssetCard({
 
       {isVideo ? (
         <>
-          {/* Video only rendered when playing */}
-          {isPlaying && (
+          {/* Video - rendered when loading or playing */}
+          {(isVideoLoading || isPlaying) && (
             <video
               src={asset.url}
-              className="absolute inset-0 size-full object-cover z-10"
+              className={`absolute inset-0 size-full object-cover z-10 pointer-events-none transition-opacity duration-200 ${
+                isPlaying ? "opacity-100" : "opacity-0"
+              }`}
               muted
               playsInline
               autoPlay
               loop
-              onEnded={() => setIsPlaying(false)}
+              onCanPlay={handleVideoReady}
             />
           )}
-          {/* Thumbnail image when not playing */}
+          {/* Thumbnail image - visible until playing */}
           {!isPlaying && thumbnailUrl && (
             <Image
               src={thumbnailUrl}
@@ -575,29 +627,33 @@ function GeneratedAssetCard({
           )}
           {/* Placeholder when no thumbnail and not playing */}
           {!isPlaying && !thumbnailUrl && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-zinc-900">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-zinc-500">
-                <path d="M8 5.14v14l11-7-11-7z" fill="currentColor" />
-              </svg>
-            </div>
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-zinc-900" />
           )}
-          {/* Play button overlay */}
-          {!isPlaying && (
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsPlaying(true);
-              }}
-              className="absolute inset-0 z-15 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              <div className="flex size-12 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition hover:bg-white/30 hover:scale-110">
+          {/* Play/Pause/Loading button overlay */}
+          <button
+            type="button"
+            onClick={handlePlayPause}
+            className={`absolute inset-0 z-15 flex items-center justify-center transition-opacity ${
+              isPlaying ? "opacity-0 hover:opacity-100" : isVideoLoading ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+            }`}
+          >
+            <div className="flex size-12 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition hover:bg-white/30 hover:scale-110">
+              {isVideoLoading ? (
+                <div className="size-6 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              ) : (
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M8 5.14v14l11-7-11-7z" />
+                  {isPlaying ? (
+                    <>
+                      <rect x="6" y="5" width="4" height="14" rx="1" />
+                      <rect x="14" y="5" width="4" height="14" rx="1" />
+                    </>
+                  ) : (
+                    <path d="M8 5.14v14l11-7-11-7z" />
+                  )}
                 </svg>
-              </div>
-            </button>
-          )}
+              )}
+            </div>
+          </button>
         </>
       ) : (
         <Image

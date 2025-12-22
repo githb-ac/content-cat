@@ -36,7 +36,7 @@ const VideoResultCard = memo(function VideoResultCard({
   const [isFavorited, setIsFavorited] = useState(false);
   // If no thumbnail, consider it "loaded" immediately (show fallback)
   const [isLoaded, setIsLoaded] = useState(!video.thumbnailUrl);
-  const { videoRef, isPlaying, handlePlayPause, handleVideoEnd } =
+  const { videoRef, isLoading, isPlaying, handlePlayPause, handleVideoReady, handleVideoEnd } =
     useVideoPlayback();
 
   const handleFavorite = () => {
@@ -88,19 +88,22 @@ const VideoResultCard = memo(function VideoResultCard({
                   <div className="skeleton-loader size-full" />
                 </div>
 
-                {/* Video Player - only rendered when playing to avoid resource drain */}
-                {isPlaying && (
+                {/* Video Player - rendered when loading or playing */}
+                {(isLoading || isPlaying) && (
                   <video
                     ref={videoRef}
                     src={video.url}
-                    className="absolute inset-0 z-[1] size-full object-contain"
+                    className={`absolute inset-0 z-[1] size-full object-contain pointer-events-none transition-opacity duration-200 ${
+                      isPlaying ? "opacity-100" : "opacity-0"
+                    }`}
                     playsInline
                     autoPlay
+                    onCanPlay={handleVideoReady}
                     onEnded={handleVideoEnd}
                   />
                 )}
 
-                {/* Thumbnail Image - always use image, never video for poster */}
+                {/* Thumbnail Image - visible until video is playing */}
                 {video.thumbnailUrl && !isPlaying && (
                   <Image
                     src={video.thumbnailUrl}
@@ -126,39 +129,48 @@ const VideoResultCard = memo(function VideoResultCard({
                   </div>
                 )}
 
-                {/* Play/Pause Button - Centered Grid */}
+                {/* Play/Pause/Loading Button - Centered Grid */}
                 <div
                   className={`grid size-full items-center justify-center transition-opacity duration-200 ${
                     isPlaying ? "opacity-0 hover:opacity-100" : "opacity-100"
                   }`}
                 >
-                  <svg
-                    width="12"
-                    height="12"
-                    viewBox="0 0 12 12"
-                    className="size-6 text-white"
-                    style={{
-                      filter: "drop-shadow(rgba(0, 0, 0, 0.5) 0px 4px 4px)",
-                    }}
-                  >
-                    {isPlaying ? (
-                      <>
+                  {isLoading ? (
+                    <div
+                      className="size-6 animate-spin rounded-full border-2 border-white/30 border-t-white"
+                      style={{
+                        filter: "drop-shadow(rgba(0, 0, 0, 0.5) 0px 4px 4px)",
+                      }}
+                    />
+                  ) : (
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 12 12"
+                      className="size-6 text-white"
+                      style={{
+                        filter: "drop-shadow(rgba(0, 0, 0, 0.5) 0px 4px 4px)",
+                      }}
+                    >
+                      {isPlaying ? (
+                        <>
+                          <path
+                            d="M3 1.5C2.44772 1.5 2 1.94772 2 2.5V9.5C2 10.0523 2.44772 10.5 3 10.5H4C4.55228 10.5 5 10.0523 5 9.5V2.5C5 1.94772 4.55228 1.5 4 1.5H3Z"
+                            fill="currentColor"
+                          />
+                          <path
+                            d="M8 1.5C7.44772 1.5 7 1.94772 7 2.5V9.5C7 10.0523 7.44772 10.5 8 10.5H9C9.55228 10.5 10 10.0523 10 9.5V2.5C10 1.94772 9.55228 1.5 9 1.5H8Z"
+                            fill="currentColor"
+                          />
+                        </>
+                      ) : (
                         <path
-                          d="M3 1.5C2.44772 1.5 2 1.94772 2 2.5V9.5C2 10.0523 2.44772 10.5 3 10.5H4C4.55228 10.5 5 10.0523 5 9.5V2.5C5 1.94772 4.55228 1.5 4 1.5H3Z"
+                          d="M4.78824 1.26719C3.78891 0.649958 2.5 1.36881 2.5 2.54339V9.45736C2.5 10.6319 3.7889 11.3508 4.78824 10.7336L10.3853 7.27657C11.3343 6.69042 11.3343 5.31034 10.3853 4.72418L4.78824 1.26719Z"
                           fill="currentColor"
                         />
-                        <path
-                          d="M8 1.5C7.44772 1.5 7 1.94772 7 2.5V9.5C7 10.0523 7.44772 10.5 8 10.5H9C9.55228 10.5 10 10.0523 10 9.5V2.5C10 1.94772 9.55228 1.5 9 1.5H8Z"
-                          fill="currentColor"
-                        />
-                      </>
-                    ) : (
-                      <path
-                        d="M4.78824 1.26719C3.78891 0.649958 2.5 1.36881 2.5 2.54339V9.45736C2.5 10.6319 3.7889 11.3508 4.78824 10.7336L10.3853 7.27657C11.3343 6.69042 11.3343 5.31034 10.3853 4.72418L4.78824 1.26719Z"
-                        fill="currentColor"
-                      />
-                    )}
-                  </svg>
+                      )}
+                    </svg>
+                  )}
                 </div>
 
                 {/* Clickable Area */}
